@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GT Table Tennis Association Website
 
-## Getting Started
+Modern web application for GTTTA built with Next.js 16, TypeScript, Tailwind CSS, Prisma 7 (Postgres), and NextAuth.
 
-First, run the development server:
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 App Router + TypeScript + Tailwind CSS |
+| Database | PostgreSQL (Neon or Supabase in prod) |
+| ORM | Prisma 7 + `@prisma/adapter-pg` |
+| Auth | NextAuth v5 (Google OAuth, single-account restriction) |
+| Photos | Vercel Blob |
+| Deploy | Vercel |
+
+## Setup (Local Dev)
+
+**Prerequisites:** Node 20+, a running PostgreSQL instance.
 
 ```bash
+git clone <repo>
+cd gttta-website
+npm install
+
+cp .env.example .env.local
+# Fill in DATABASE_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAIL
+
+npx prisma generate
+npx prisma migrate dev
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Admin is at http://localhost:3000/admin.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See `.env.example`. Key ones:
 
-## Learn More
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console OAuth 2.0 |
+| `GOOGLE_CLIENT_SECRET` | Same |
+| `ADMIN_EMAIL` | The club Google account email — only this can log into /admin |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token — required for photo uploads |
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment (Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+vercel --prod
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Add all env vars in the Vercel dashboard. Add `https://your-domain.vercel.app/api/auth/callback/google` to Google OAuth redirect URIs.
 
-## Deploy on Vercel
+## Database Migrations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx prisma migrate dev --name describe-change   # local
+npx prisma migrate deploy                        # production (in CI/CD)
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tests
+
+```bash
+npm test
+```
+
+Covers the USATT rating engine in `src/lib/__tests__/usatt-rating.test.ts`.
+
+## Project Structure
+
+```
+src/
+  app/
+    (public)/     public pages (home, rankings, results, gallery, news, etc.)
+    admin/        admin dashboard (requires Google login)
+    api/          CSV exports, photo upload, NextAuth
+    actions/      server actions (league night save + rating update)
+  components/
+    ui/           Nav, Footer
+    admin/        LeagueEntryForm, BracketGenerator, PhotoUploader
+  lib/
+    db.ts         Prisma singleton
+    auth.ts       NextAuth config
+    usatt-rating.ts  rating calculation engine
+    bracket.ts    bracket generation
+```
+
+For importing historical data from Google Sheets, see `WEBMASTER_GUIDE.md`.
