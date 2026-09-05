@@ -12,9 +12,14 @@ export default async function LeagueIndexPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[var(--gt-navy)]">League Nights</h1>
-        <Link href="/admin/league/new" className="bg-[var(--gt-navy)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition">
-          + Enter New Night
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/league/schedule" className="border border-[var(--gt-navy)] text-[var(--gt-navy)] px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
+            + Schedule Night
+          </Link>
+          <Link href="/admin/league/new" className="bg-[var(--gt-navy)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition">
+            + Enter New Night
+          </Link>
+        </div>
       </div>
 
       {nights.length === 0 ? (

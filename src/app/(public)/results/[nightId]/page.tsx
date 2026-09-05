@@ -74,7 +74,7 @@ export default async function NightResultsPage({ params }: { params: Promise<{ n
                       return (
                         <tr key={e.id} className="border-t">
                           <td className="px-4 py-2 text-gray-600">{e.placement ?? "—"}</td>
-                          <td className="px-4 py-2 font-medium text-[var(--gt-navy)]">{e.player.name}</td>
+                          <td className="px-4 py-2 font-medium text-[var(--gt-navy)]">{e.player?.name ?? e.guestName ?? "Guest"}</td>
                           <td className="px-4 py-2 text-right text-gray-600">{e.ratingBefore}</td>
                           <td className="px-4 py-2 text-right text-gray-600">{e.ratingAfter ?? "—"}</td>
                           <td className={`px-4 py-2 text-right font-semibold ${delta == null ? "" : delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-gray-400"}`}>
@@ -93,8 +93,10 @@ export default async function NightResultsPage({ params }: { params: Promise<{ n
                   <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Match Scores</p>
                   <ul className="space-y-1 text-sm">
                     {group.matches.map((m) => {
-                      const p1Name = group.entries.find((e) => e.playerId === m.player1Id)?.player.name ?? m.player1Id;
-                      const p2Name = group.entries.find((e) => e.playerId === m.player2Id)?.player.name ?? m.player2Id;
+                      const p1Entry = group.entries.find((e) => e.playerId === m.player1Id);
+                      const p2Entry = group.entries.find((e) => e.playerId === m.player2Id);
+                      const p1Name = p1Entry?.player?.name ?? p1Entry?.guestName ?? m.player1Id;
+                      const p2Name = p2Entry?.player?.name ?? p2Entry?.guestName ?? m.player2Id;
                       return (
                         <li key={m.id} className="flex gap-2 items-center">
                           <span className={m.winnerId === m.player1Id ? "font-semibold text-[var(--gt-navy)]" : "text-gray-600"}>{p1Name}</span>

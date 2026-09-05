@@ -54,16 +54,30 @@ model VerificationToken {
 
 // --- Club Data ---
 model Player {
-  id            String         @id @default(cuid())
+  id            String                    @id @default(cuid())
   name          String
-  email         String?        @unique
-  leagueRating  Int            @default(500)
+  email         String?                   @unique
+  leagueRating  Int                       @default(500)
   usattRating   Int?
-  active        Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  active        Boolean                   @default(true)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
   groupEntries  GroupEntry[]
   ratingHistory RatingHistory[]
+  registrations LeagueNightRegistration[]
+}
+
+model LeagueNightRegistration {
+  id            String      @id @default(cuid())
+  leagueNightId String
+  leagueNight   LeagueNight @relation(fields: [leagueNightId], references: [id])
+  playerId      String?
+  player        Player?     @relation(fields: [playerId], references: [id])
+  guestName     String?
+  guestEmail    String?
+  createdAt     DateTime    @default(now())
+
+  @@unique([leagueNightId, playerId])
 }
 
 model Season {
@@ -75,14 +89,16 @@ model Season {
 }
 
 model LeagueNight {
-  id        String     @id @default(cuid())
-  date      DateTime
-  seasonId  String
-  season    Season     @relation(fields: [seasonId], references: [id])
-  groups    Group[]
-  auditLog  AuditLog[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id            String                     @id @default(cuid())
+  date          DateTime
+  seasonId      String
+  season        Season                     @relation(fields: [seasonId], references: [id])
+  status        String                     @default("registration_open") // "registration_open" | "in_progress" | "completed"
+  groups        Group[]
+  registrations LeagueNightRegistration[]
+  auditLog      AuditLog[]
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
 }
 
 model Group {
@@ -98,25 +114,28 @@ model GroupEntry {
   id           String  @id @default(cuid())
   groupId      String
   group        Group   @relation(fields: [groupId], references: [id])
-  playerId     String
-  player       Player  @relation(fields: [playerId], references: [id])
+  playerId     String?
+  player       Player? @relation(fields: [playerId], references: [id])
+  guestName    String? // populated when playerId is null
   ratingBefore Int
   ratingAfter  Int?
   placement    Int?    // 1=winner, 2=runner-up, etc.
-
-  @@unique([groupId, playerId])
 }
 
 model Match {
-  id        String  @id @default(cuid())
-  groupId   String
-  group     Group   @relation(fields: [groupId], references: [id])
-  player1Id String
-  player2Id String
+  id               String    @id @default(cuid())
+  groupId          String
+  group            Group     @relation(fields: [groupId], references: [id])
+  player1Id        String
+  player2Id        String
   // Comma-separated per-game scores, e.g. "11-7,8-11,11-9"
-  scoreP1   String
-  scoreP2   String
-  winnerId  String?
+  scoreP1          String?
+  scoreP2          String?
+  winnerId         String?
+  status           String    @default("pending_entry") // "pending_entry" | "pending_approval" | "approved" | "rejected"
+  submittedByEmail String?
+  submittedAt      DateTime?
+  rejectionReason  String?
 }
 
 model RatingHistory {
