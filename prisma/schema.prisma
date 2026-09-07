@@ -216,6 +216,7 @@ model ResourceLink {
   title       String
   url         String
   description String?
+  category    String  @default("general")
   order       Int     @default(0)
 }
 

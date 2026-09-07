@@ -85,6 +85,19 @@ export default async function SchedulePage() {
           </ul>
         )}
       </div>
+
+      {/* Google Calendar */}
+      <div className="mt-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-[var(--gt-navy)]">Club Calendar</h2>
+          {/* ponytail: placeholder until GTTTA shares their public calendar embed URL */}
+          <span className="text-xs text-gray-400 italic">Google Calendar coming soon</span>
+        </div>
+        <div className="border rounded-xl bg-[var(--gt-light)] p-8 text-center text-gray-500 text-sm">
+          <p>The GTTTA Google Calendar will be embedded here.</p>
+          <p className="mt-1 text-xs text-gray-400">Contact the Webmaster to set up the public calendar link.</p>
+        </div>
+      </div>
     </div>
   );
 }
