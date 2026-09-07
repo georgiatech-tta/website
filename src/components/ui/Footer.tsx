@@ -2,16 +2,46 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-[var(--gt-navy)] text-white/70 text-sm mt-auto">
-      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col md:flex-row justify-between gap-4">
+    <footer
+      className="mt-auto"
+      style={{
+        background: "rgba(0,16,40,0.7)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderTop: "1px solid var(--glass-border)",
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row justify-between gap-6">
         <div>
-          <p className="text-white font-semibold">GT Table Tennis Association</p>
-          <p>Georgia Institute of Technology · Atlanta, GA</p>
+          <p
+            className="font-bold text-base mb-1"
+            style={{ fontFamily: "var(--font-syne, sans-serif)", color: "var(--gt-gold)" }}
+          >
+            GT Table Tennis Association
+          </p>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+            Georgia Institute of Technology · Atlanta, GA
+          </p>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "0.25rem" }}>
+            NCTTA Georgia Division Champions: 2008–2015 · 2017 · 2023
+          </p>
         </div>
-        <div className="flex gap-6 text-sm">
-          <Link href="/about" className="hover:text-white transition-colors">Contact</Link>
-          <Link href="/resources" className="hover:text-white transition-colors">Resources</Link>
-          <Link href="/admin" className="hover:text-white transition-colors">Admin</Link>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+          {[
+            { href: "/schedule", label: "Schedule" },
+            { href: "/league", label: "League" },
+            { href: "/about", label: "Contact" },
+            { href: "/resources", label: "Resources" },
+            { href: "/admin", label: "Admin" },
+          ].map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="transition-colors hover:text-[var(--gt-gold-light)]"
+            >
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
     </footer>

@@ -13,13 +13,28 @@ export default async function RankingsPage() {
   });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[var(--gt-navy)] mb-2">Player Rankings</h1>
-      <p className="text-gray-500 mb-6">Active members ordered by internal league rating.</p>
+    <div className="max-w-4xl mx-auto px-4 py-16">
+      <p className="reveal text-xs uppercase tracking-[0.15em] mb-2" style={{ color: "var(--gt-gold)" }}>
+        Leaderboard
+      </p>
+      <h1 className="reveal stagger-1 display text-4xl md:text-5xl mb-4" style={{ color: "var(--text-primary)" }}>
+        Player Rankings
+      </h1>
+      <p className="reveal stagger-2 text-base mb-10" style={{ color: "var(--text-secondary)" }}>
+        Active members ordered by internal league rating. Updated after each league night.
+      </p>
+
       {players.length === 0 ? (
-        <p className="text-gray-500">No rankings yet — check back after our first league night!</p>
+        <div className="reveal glass-sm p-8 text-center">
+          <p className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>No rankings yet</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Ratings will appear here after our first league night.
+          </p>
+        </div>
       ) : (
-        <RankingsTable players={players} />
+        <div className="reveal glass overflow-hidden">
+          <RankingsTable players={players} />
+        </div>
       )}
     </div>
   );

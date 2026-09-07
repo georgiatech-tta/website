@@ -11,7 +11,6 @@ export default async function ResultsPage() {
     include: { season: { select: { id: true, name: true } } },
   });
 
-  // Group by season
   const bySeason = new Map<string, { seasonName: string; nights: typeof nights }>();
   for (const n of nights) {
     const key = n.season.id;
@@ -20,58 +19,75 @@ export default async function ResultsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[var(--gt-navy)] mb-2">League Results</h1>
-      <p className="text-gray-500 mb-6">Click a night to see group standings and match scores.</p>
+    <div className="max-w-4xl mx-auto px-4 py-16">
+      <p className="reveal text-xs uppercase tracking-[0.15em] mb-2" style={{ color: "var(--gt-gold)" }}>
+        Archives
+      </p>
+      <h1 className="reveal stagger-1 display text-4xl md:text-5xl mb-4" style={{ color: "var(--text-primary)" }}>
+        League Results
+      </h1>
+      <p className="reveal stagger-2 text-base mb-10" style={{ color: "var(--text-secondary)" }}>
+        Click any session to see group standings and match scores.
+      </p>
 
-      {/* League overview callout */}
-      <div className="bg-[var(--gt-light)] border rounded-xl p-5 mb-10 text-sm text-gray-700 space-y-2">
-        <p className="font-semibold text-[var(--gt-navy)] text-base">How the League Works</p>
-        <p>
-          Players are placed into <strong>round-robin groups of 3–6</strong> based on their current rating. Each player plays
-          one match against every other player in their group. Match results are used to update ratings via the USATT formula.
+      {/* Overview callout */}
+      <div className="reveal glass p-6 mb-12">
+        <h2 className="display text-lg mb-3" style={{ color: "var(--gt-gold)" }}>How the League Works</h2>
+        <p className="text-sm mb-3" style={{ color: "var(--text-secondary)", lineHeight: 1.75 }}>
+          Players are placed into <strong style={{ color: "var(--text-primary)" }}>round-robin groups of 3–6</strong> based on
+          their current rating. Each player plays one match against every other player in their group. Results update ratings via
+          the <strong style={{ color: "var(--text-primary)" }}>USATT formula</strong>.
         </p>
-        <ul className="list-disc list-inside space-y-1 text-gray-600">
-          <li>Sessions are capped at <strong>32 players</strong></li>
-          <li>You <strong>must sign up</strong> via the Google Form posted in Discord each week</li>
-          <li>If you signed up but can&apos;t attend, notify leadership on Discord</li>
+        <ul className="space-y-1.5 text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+          {[
+            "Sessions capped at 32 players",
+            "Sign up via Discord each week when the form is posted",
+            "If you signed up but can't attend, notify leadership on Discord",
+          ].map((item) => (
+            <li key={item} className="flex items-start gap-2">
+              <span style={{ color: "var(--gt-gold)" }}>·</span> {item}
+            </li>
+          ))}
         </ul>
-        <p className="text-gray-500 text-xs pt-1">
-          Looking for older results?{" "}
+        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+          Older results?{" "}
           <a
             href="https://tta.gtorg.gatech.edu/league"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--gt-navy)] underline underline-offset-2"
+            className="underline underline-offset-2"
+            style={{ color: "var(--gt-gold)" }}
           >
-            View the historical archive (2014–2025) →
+            View historical archive (2014–2025) →
           </a>
         </p>
       </div>
 
       {bySeason.size === 0 ? (
-        <p className="text-gray-500">No results yet — check back after our next league night!</p>
+        <div className="reveal glass-sm p-8 text-center">
+          <p className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>No results yet</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Check back after our next league night.</p>
+        </div>
       ) : (
         <div className="space-y-10">
           {[...bySeason.values()].map(({ seasonName, nights: sNights }) => (
             <div key={seasonName}>
-              <h2 className="text-lg font-semibold text-[var(--gt-navy)] mb-3 border-b pb-1">{seasonName}</h2>
+              <p className="reveal text-xs uppercase tracking-[0.12em] mb-4" style={{ color: "var(--gt-gold)" }}>
+                {seasonName}
+              </p>
               <ul className="space-y-2">
-                {sNights.map((n) => (
+                {sNights.map((n, i) => (
                   <li key={n.id}>
                     <Link
                       href={`/results/${n.id}`}
-                      className="flex items-center justify-between rounded-xl border px-4 py-3 bg-white hover:bg-[var(--gt-light)] transition group"
+                      className={`reveal stagger-${(i % 4) + 1} glass glass-hover p-4 flex items-center justify-between block`}
                     >
-                      <span className="font-medium text-[var(--gt-navy)] group-hover:underline">
+                      <span className="font-medium" style={{ color: "var(--text-primary)" }}>
                         {new Date(n.date).toLocaleDateString("en-US", {
-                          weekday: "long",
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
+                          weekday: "long", month: "long", day: "numeric", year: "numeric",
                         })}
                       </span>
-                      <span className="text-xs text-gray-400">View →</span>
+                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>View →</span>
                     </Link>
                   </li>
                 ))}

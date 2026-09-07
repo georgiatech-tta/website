@@ -4,59 +4,28 @@ import type { Metadata } from "next";
 export const revalidate = 60;
 export const metadata: Metadata = { title: "Tournaments | GT Table Tennis" };
 
-const typeBadge: Record<string, string> = {
-  nctta: "bg-[var(--gt-gold)] text-[var(--gt-navy)]",
-  usatt: "bg-blue-100 text-blue-800",
-  local: "bg-green-100 text-green-800",
-  other: "bg-gray-100 text-gray-700",
-};
-
 type Tournament = { id: string; name: string; date: Date; type: string; location: string | null; url: string | null; description: string | null };
 
-function TournamentTable({ tournaments }: { tournaments: Tournament[] }) {
+function TournamentList({ tournaments }: { tournaments: Tournament[] }) {
   if (tournaments.length === 0) return null;
   return (
-    <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full text-sm">
-        <thead className="bg-[var(--gt-navy)] text-white text-left">
-          <tr>
-            <th className="px-4 py-3">Name</th>
-            <th className="px-4 py-3">Date</th>
-            <th className="px-4 py-3">Location</th>
-            <th className="px-4 py-3">Info</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tournaments.map((t, i) => (
-            <tr key={t.id} className={i % 2 === 0 ? "bg-white" : "bg-[var(--gt-light)]"}>
-              <td className="px-4 py-3 font-medium text-[var(--gt-navy)]">{t.name}</td>
-              <td className="px-4 py-3 whitespace-nowrap">
-                {new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </td>
-              <td className="px-4 py-3 text-gray-600">{t.location ?? "—"}</td>
-              <td className="px-4 py-3">
-                {t.url ? (
-                  <a href={t.url} target="_blank" rel="noopener noreferrer" className="text-[var(--gt-navy)] underline underline-offset-2 text-xs">
-                    Details →
-                  </a>
-                ) : "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function Section({ title, badge, children }: { title: string; badge: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-10">
-      <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold text-[var(--gt-navy)]">{title}</h2>
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full uppercase ${badge}`}>{title.split(" ")[0]}</span>
-      </div>
-      {children}
+    <div className="space-y-3">
+      {tournaments.map((t, i) => (
+        <div key={t.id} className={`reveal stagger-${(i % 4) + 1} glass glass-hover p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}>
+          <div>
+            <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{t.name}</p>
+            <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
+              {new Date(t.date).toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" })}
+              {t.location ? ` · ${t.location}` : ""}
+            </p>
+          </div>
+          {t.url && (
+            <a href={t.url} target="_blank" rel="noopener noreferrer" className="btn-glass text-xs shrink-0">
+              Details →
+            </a>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -72,91 +41,99 @@ export default async function TournamentsPage() {
   const upcomingNctta = upcoming.filter((t) => t.type === "nctta");
   const upcomingUsatt = upcoming.filter((t) => t.type === "usatt");
   const upcomingOther = upcoming.filter((t) => t.type !== "nctta" && t.type !== "usatt");
-
   const pastNctta = past.filter((t) => t.type === "nctta");
   const pastUsatt = past.filter((t) => t.type === "usatt");
   const pastOther = past.filter((t) => t.type !== "nctta" && t.type !== "usatt");
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[var(--gt-navy)] mb-2">Tournaments</h1>
+    <div className="max-w-5xl mx-auto px-4 py-16">
+      <p className="reveal text-xs uppercase tracking-[0.15em] mb-2" style={{ color: "var(--gt-gold)" }}>
+        Competitions
+      </p>
+      <h1 className="reveal stagger-1 display text-4xl md:text-5xl mb-12" style={{ color: "var(--text-primary)" }}>
+        Tournaments
+      </h1>
 
-      {/* Info callout */}
-      <div className="bg-[var(--gt-light)] border rounded-xl p-5 mb-10 text-sm text-gray-700 space-y-3">
+      {/* Policy callout */}
+      <div className="reveal glass p-6 mb-12 grid sm:grid-cols-2 gap-6">
         <div>
-          <p className="font-semibold text-[var(--gt-navy)] mb-1">NCTTA Tournaments</p>
-          <p>
-            GTTTA covers registration fees for all NCTTA tournaments that eligible members choose to participate in.
-            Individual players may also qualify for singles through strong performance at Divisionals.
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--gt-gold)" }}>NCTTA</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)", lineHeight: 1.7 }}>
+            GTTTA covers registration fees for all eligible NCTTA tournaments. Individual players may qualify for singles
+            through strong performance at Divisionals.
           </p>
         </div>
         <div>
-          <p className="font-semibold text-[var(--gt-navy)] mb-1">USATT Tournaments</p>
-          <p>
-            Open to all skill levels — not just collegiate players. A{" "}
-            <a href="https://www.usatt.org/join" target="_blank" rel="noopener noreferrer" className="text-[var(--gt-navy)] underline underline-offset-2">
+          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--gt-gold)" }}>USATT</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)", lineHeight: 1.7 }}>
+            Open to all skill levels — not just collegiate athletes. A{" "}
+            <a href="https://www.usatt.org/join" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" style={{ color: "var(--gt-gold)" }}>
               USATT membership
             </a>{" "}
-            ($25/year) is required to participate.{" "}
-            <a
-              href="https://www.usatt.org/tournaments/upcoming-tournaments"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[var(--gt-navy)] underline underline-offset-2"
-            >
-              Browse USATT tournaments by state →
+            ($25/yr) is required.{" "}
+            <a href="https://www.usatt.org/tournaments/upcoming-tournaments" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" style={{ color: "var(--gt-gold)" }}>
+              Browse by state →
             </a>
           </p>
         </div>
       </div>
 
       {/* Upcoming */}
-      <h2 className="text-2xl font-bold text-[var(--gt-navy)] mb-6">Upcoming</h2>
+      <h2 className="reveal display text-2xl mb-6" style={{ color: "var(--text-primary)" }}>Upcoming</h2>
       {upcoming.length === 0 ? (
-        <p className="text-gray-500 mb-10">No upcoming tournaments scheduled — check back soon!</p>
+        <div className="reveal glass-sm p-6 text-center mb-12" style={{ color: "var(--text-muted)" }}>
+          No upcoming tournaments scheduled — check back soon.
+        </div>
       ) : (
-        <>
+        <div className="space-y-8 mb-14">
           {upcomingNctta.length > 0 && (
-            <Section title="NCTTA Tournaments" badge={typeBadge.nctta}>
-              <TournamentTable tournaments={upcomingNctta} />
-            </Section>
+            <div>
+              <p className="reveal text-xs uppercase tracking-[0.12em] mb-3" style={{ color: "var(--gt-gold)" }}>NCTTA</p>
+              <TournamentList tournaments={upcomingNctta} />
+            </div>
           )}
           {upcomingUsatt.length > 0 && (
-            <Section title="USATT Tournaments" badge={typeBadge.usatt}>
-              <TournamentTable tournaments={upcomingUsatt} />
-            </Section>
+            <div>
+              <p className="reveal text-xs uppercase tracking-[0.12em] mb-3" style={{ color: "var(--gt-gold)" }}>USATT</p>
+              <TournamentList tournaments={upcomingUsatt} />
+            </div>
           )}
           {upcomingOther.length > 0 && (
-            <Section title="Other Tournaments" badge={typeBadge.other}>
-              <TournamentTable tournaments={upcomingOther} />
-            </Section>
+            <div>
+              <p className="reveal text-xs uppercase tracking-[0.12em] mb-3" style={{ color: "var(--gt-gold)" }}>Other</p>
+              <TournamentList tournaments={upcomingOther} />
+            </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Past */}
       {past.length > 0 && (
-        <details className="border rounded-xl">
-          <summary className="px-4 py-3 font-semibold text-[var(--gt-navy)] cursor-pointer select-none">
-            Past Tournaments ({past.length})
+        <details className="reveal glass" style={{ borderRadius: "var(--r-md)" }}>
+          <summary
+            className="px-5 py-4 font-semibold cursor-pointer select-none list-none flex items-center justify-between"
+            style={{ color: "var(--text-primary)" }}
+          >
+            <span>Past Tournaments ({past.length})</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Click to expand</span>
           </summary>
-          <div className="p-4 pt-2 space-y-6">
+          <div className="px-5 pb-5 space-y-6">
             {pastNctta.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">NCTTA</p>
-                <TournamentTable tournaments={pastNctta} />
+                <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--gt-gold)" }}>NCTTA</p>
+                <TournamentList tournaments={pastNctta} />
               </div>
             )}
             {pastUsatt.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">USATT</p>
-                <TournamentTable tournaments={pastUsatt} />
+                <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--gt-gold)" }}>USATT</p>
+                <TournamentList tournaments={pastUsatt} />
               </div>
             )}
             {pastOther.length > 0 && (
               <div>
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Other</p>
-                <TournamentTable tournaments={pastOther} />
+                <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "var(--gt-gold)" }}>Other</p>
+                <TournamentList tournaments={pastOther} />
               </div>
             )}
           </div>

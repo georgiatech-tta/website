@@ -6,10 +6,10 @@ export const metadata: Metadata = { title: "Schedule | GT Table Tennis" };
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const typeBadge: Record<string, string> = {
-  league: "bg-[var(--gt-gold)] text-[var(--gt-navy)]",
-  training: "bg-blue-100 text-blue-800",
-  casual: "bg-green-100 text-green-800",
+const typeBadgeStyle: Record<string, { bg: string; color: string }> = {
+  league:   { bg: "rgba(179,163,105,0.2)",  color: "var(--gt-gold-light)" },
+  training: { bg: "rgba(96,165,250,0.15)", color: "#93c5fd" },
+  casual:   { bg: "rgba(74,222,128,0.15)", color: "#86efac" },
 };
 
 export default async function SchedulePage() {
@@ -18,84 +18,94 @@ export default async function SchedulePage() {
 
   const [schedule, exceptions] = await Promise.all([
     prisma.scheduleEntry.findMany({ where: { active: true }, orderBy: { dayOfWeek: "asc" } }),
-    prisma.scheduleException.findMany({
-      where: { date: { gte: today } },
-      orderBy: { date: "asc" },
-    }),
+    prisma.scheduleException.findMany({ where: { date: { gte: today } }, orderBy: { date: "asc" } }),
   ]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[var(--gt-navy)] mb-2">Weekly Schedule</h1>
-      <p className="text-gray-500 mb-8">Recurring practice times this semester.</p>
+    <div className="max-w-4xl mx-auto px-4 py-16">
+      <p className="reveal text-xs uppercase tracking-[0.15em] mb-2" style={{ color: "var(--gt-gold)" }}>
+        When we play
+      </p>
+      <h1 className="reveal stagger-1 display text-4xl md:text-5xl mb-4" style={{ color: "var(--text-primary)" }}>
+        Weekly Schedule
+      </h1>
+      <p className="reveal stagger-2 text-base mb-12" style={{ color: "var(--text-secondary)" }}>
+        Recurring practice times this semester — held at the CRC, 4th floor.
+      </p>
 
       {schedule.length === 0 ? (
-        <p className="text-gray-500">Schedule not posted yet — check back soon.</p>
+        <p style={{ color: "var(--text-secondary)" }}>Schedule not posted yet — check back soon.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--gt-navy)] text-white text-left">
-              <tr>
-                <th className="px-4 py-3">Day</th>
-                <th className="px-4 py-3">Time</th>
-                <th className="px-4 py-3">Location</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedule.map((s, i) => (
-                <tr key={s.id} className={i % 2 === 0 ? "bg-white" : "bg-[var(--gt-light)]"}>
-                  <td className="px-4 py-3 font-medium text-[var(--gt-navy)]">{days[s.dayOfWeek]}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">{s.startTime} – {s.endTime}</td>
-                  <td className="px-4 py-3">{s.location}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${typeBadge[s.type] ?? "bg-gray-100 text-gray-700"}`}>
-                      {s.type}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{s.notes ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid sm:grid-cols-3 gap-4 mb-14">
+          {schedule.map((s, i) => {
+            const badge = typeBadgeStyle[s.type] ?? { bg: "rgba(255,255,255,0.1)", color: "var(--text-secondary)" };
+            return (
+              <div key={s.id} className={`reveal stagger-${i + 1} glass glass-hover p-6`}>
+                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--gt-gold)" }}>
+                  {days[s.dayOfWeek]}s
+                </p>
+                <p className="font-bold text-xl mb-1" style={{ color: "var(--text-primary)" }}>
+                  {s.startTime} – {s.endTime}
+                </p>
+                <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>{s.location}</p>
+                <span
+                  className="text-xs font-semibold px-2 py-0.5 rounded-full capitalize"
+                  style={{ background: badge.bg, color: badge.color }}
+                >
+                  {s.type}
+                </span>
+                {s.notes && (
+                  <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{s.notes}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <div className="mt-12">
-        <h2 className="text-xl font-bold text-[var(--gt-navy)] mb-4">Upcoming Exceptions</h2>
+      {/* Exceptions */}
+      <div className="reveal mb-14">
+        <h2 className="display text-2xl mb-5" style={{ color: "var(--text-primary)" }}>Upcoming Changes</h2>
         {exceptions.length === 0 ? (
-          <p className="text-gray-500 italic">No exceptions this semester.</p>
+          <div className="glass-sm p-5 text-center" style={{ color: "var(--text-muted)" }}>
+            No exceptions this semester — all practices are running as scheduled.
+          </div>
         ) : (
-          <ul className="space-y-3">
+          <div className="space-y-3">
             {exceptions.map((e) => (
-              <li key={e.id} className="flex items-start gap-4 border rounded-xl p-4 bg-white">
-                <span className={`mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${e.cancelled ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+              <div key={e.id} className="reveal glass glass-hover p-5 flex items-start gap-4">
+                <span
+                  className="shrink-0 text-xs font-semibold px-2 py-1 rounded-full mt-0.5"
+                  style={
+                    e.cancelled
+                      ? { background: "rgba(239,68,68,0.15)", color: "#fca5a5" }
+                      : { background: "rgba(251,191,36,0.15)", color: "#fde68a" }
+                  }
+                >
                   {e.cancelled ? "Cancelled" : "Changed"}
                 </span>
                 <div>
-                  <p className="font-medium text-[var(--gt-navy)]">
+                  <p className="font-medium" style={{ color: "var(--text-primary)" }}>
                     {new Date(e.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                   </p>
-                  <p className="text-sm text-gray-600">{e.reason}</p>
-                  {e.notes && <p className="text-sm text-gray-400 mt-0.5">{e.notes}</p>}
+                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{e.reason}</p>
+                  {e.notes && <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{e.notes}</p>}
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
-      {/* Google Calendar */}
-      <div className="mt-12">
+      {/* Calendar placeholder */}
+      <div className="reveal">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[var(--gt-navy)]">Club Calendar</h2>
-          {/* ponytail: placeholder until GTTTA shares their public calendar embed URL */}
-          <span className="text-xs text-gray-400 italic">Google Calendar coming soon</span>
+          <h2 className="display text-2xl" style={{ color: "var(--text-primary)" }}>Club Calendar</h2>
+          <span className="text-xs italic" style={{ color: "var(--text-muted)" }}>Coming soon</span>
         </div>
-        <div className="border rounded-xl bg-[var(--gt-light)] p-8 text-center text-gray-500 text-sm">
+        <div className="glass p-10 text-center" style={{ color: "var(--text-muted)" }}>
           <p>The GTTTA Google Calendar will be embedded here.</p>
-          <p className="mt-1 text-xs text-gray-400">Contact the Webmaster to set up the public calendar link.</p>
+          <p className="text-xs mt-1">Contact the Webmaster to set up the public calendar link.</p>
         </div>
       </div>
     </div>
