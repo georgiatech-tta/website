@@ -7,9 +7,8 @@ import { useState } from "react";
 const links = [
   { href: "/", label: "Home" },
   { href: "/schedule", label: "Schedule" },
+  { href: "/league", label: "League" },
   { href: "/rankings", label: "Rankings" },
-  { href: "/results", label: "Results" },
-  { href: "/gallery", label: "Gallery" },
   { href: "/news", label: "News" },
   { href: "/tournaments", label: "Tournaments" },
   { href: "/about", label: "About" },
@@ -21,9 +20,6 @@ export default function Nav() {
 
   return (
     <nav className="bg-[var(--gt-navy)] text-white shadow-md">
-      <div className="bg-[var(--gt-gold)] text-[var(--gt-navy)] text-xs font-semibold text-center py-1 px-4 tracking-wide">
-        NCTTA Georgia Division Champions: 2008 · 2009 · 2010 · 2011 · 2012 · 2013 · 2014 · 2015 · 2017 · 2023
-      </div>
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14">
         <Link href="/" className="font-bold text-[var(--gt-gold)] text-lg tracking-tight">
           GT Table Tennis
