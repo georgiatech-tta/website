@@ -9,7 +9,7 @@ export default function ScrollReveal({ children }: { children: React.ReactNode }
     const root = ref.current;
     if (!root) return;
 
-    const targets = root.querySelectorAll<HTMLElement>(".reveal");
+    const targets = root.querySelectorAll<HTMLElement>(".reveal, .reveal-left, .reveal-right");
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -19,7 +19,7 @@ export default function ScrollReveal({ children }: { children: React.ReactNode }
           }
         }
       },
-      { threshold: 0.12 }
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
     );
 
     targets.forEach((el) => observer.observe(el));

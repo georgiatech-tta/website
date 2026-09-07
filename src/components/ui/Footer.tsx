@@ -15,7 +15,7 @@ export default function Footer() {
         <div>
           <p
             className="font-bold text-base mb-1"
-            style={{ fontFamily: "var(--font-syne, sans-serif)", color: "var(--gt-gold)" }}
+            style={{ fontFamily: "var(--font-display, sans-serif)", color: "var(--gt-gold)" }}
           >
             GT Table Tennis Association
           </p>

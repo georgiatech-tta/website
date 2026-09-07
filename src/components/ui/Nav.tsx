@@ -33,10 +33,10 @@ export default function Nav() {
       className="sticky top-0 z-50 transition-all duration-300"
       style={{
         background: scrolled
-          ? "rgba(0,24,56,0.82)"
-          : "rgba(0,24,56,0.45)",
-        backdropFilter: "blur(24px) saturate(160%)",
-        WebkitBackdropFilter: "blur(24px) saturate(160%)",
+          ? "rgba(4,8,18,0.88)"
+          : "rgba(4,8,18,0.5)",
+        backdropFilter: "blur(20px) saturate(130%)",
+        WebkitBackdropFilter: "blur(20px) saturate(130%)",
         borderBottom: scrolled
           ? "1px solid rgba(179,163,105,0.18)"
           : "1px solid rgba(179,163,105,0.08)",
@@ -47,7 +47,7 @@ export default function Nav() {
         <Link
           href="/"
           className="font-bold text-lg tracking-tight"
-          style={{ fontFamily: "var(--font-syne, sans-serif)", color: "var(--gt-gold)" }}
+          style={{ fontFamily: "var(--font-display, sans-serif)", color: "var(--gt-gold)" }}
         >
           GT Table Tennis
         </Link>
