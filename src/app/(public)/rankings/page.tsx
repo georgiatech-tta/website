@@ -44,10 +44,15 @@ export default async function RankingsPage() {
       </p>
 
       {players.length === 0 ? (
-        <div className="reveal glass-sm p-8 text-center">
-          <p className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>No rankings yet</p>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Ratings will appear here after our first league night.
+        <div className="reveal glass p-12 text-center">
+          <p className="text-xs uppercase tracking-[0.2em] mb-3 font-semibold" style={{ color: "var(--gt-gold)" }}>
+            Coming Soon
+          </p>
+          <p className="display text-2xl mb-3" style={{ color: "var(--text-primary)" }}>
+            Rankings launch after tryouts
+          </p>
+          <p className="text-sm max-w-sm mx-auto" style={{ color: "var(--text-muted)", lineHeight: 1.7 }}>
+            Player ratings will appear here once the season kicks off. Check back after the first league night.
           </p>
         </div>
       ) : (
