@@ -21,7 +21,7 @@ const DB_DOWN = <div className="max-w-4xl mx-auto px-4 py-16 text-center"><div c
 export default async function NightResultsPage({ params }: { params: Promise<{ nightId: string }> }) {
   const { nightId } = await params;
 
-  let night: Awaited<ReturnType<typeof prisma.leagueNight.findUnique<{ include: { season: { select: { name: true } }; groups: { include: { entries: { include: { player: { select: { name: true } } }; orderBy: { placement: "asc" } }; matches: true }; orderBy: { tableNumber: "asc" } } } }>>>;
+  let night: Awaited<ReturnType<typeof prisma.leagueNight.findUnique<{ where: { id: string }; include: { season: { select: { name: true } }; groups: { include: { entries: { include: { player: { select: { name: true } } }; orderBy: { placement: "asc" } }; matches: true }; orderBy: { tableNumber: "asc" } } } }>>>;
   try {
     night = await prisma.leagueNight.findUnique({
       where: { id: nightId },

@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ albumId: 
 export default async function AlbumPage({ params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = await params;
 
-  let album: Awaited<ReturnType<typeof prisma.album.findUnique<{ include: { photos: { orderBy: { order: "asc" } } } }>>> | null = null;
+  let album: Awaited<ReturnType<typeof prisma.album.findUnique<{ where: { id: string }; include: { photos: { orderBy: { order: "asc" } } } }>>> | null = null;
   try {
     album = await prisma.album.findUnique({ where: { id: albumId }, include: { photos: { orderBy: { order: "asc" } } } });
   } catch {}
