@@ -1,16 +1,35 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
 import RankingsTable from "./RankingsTable";
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: "Rankings | GT Table Tennis" };
+export const metadata = buildMeta("Rankings", "Live player rankings and ratings for GT Table Tennis league.");
 
 export default async function RankingsPage() {
-  const players = await prisma.player.findMany({
-    where: { active: true },
-    orderBy: { leagueRating: "desc" },
-    select: { id: true, name: true, leagueRating: true, usattRating: true },
-  });
+  let players: { id: string; name: string; leagueRating: number; usattRating: number | null }[] = [];
+  let histories: { playerId: string; rating: number; createdAt: Date }[] = [];
+  try {
+    [players, histories] = await Promise.all([
+      prisma.player.findMany({
+        where: { active: true },
+        orderBy: { leagueRating: "desc" },
+        select: { id: true, name: true, leagueRating: true, usattRating: true },
+      }),
+      prisma.ratingHistory.findMany({
+        where: { player: { active: true } },
+        select: { playerId: true, rating: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
+  } catch {}
+
+  const historyMapRaw = new Map<string, number[]>();
+  for (const h of histories) {
+    const arr = historyMapRaw.get(h.playerId) ?? [];
+    arr.push(h.rating);
+    historyMapRaw.set(h.playerId, arr.slice(-10));
+  }
+  const historyMap = Object.fromEntries(historyMapRaw);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
@@ -33,7 +52,7 @@ export default async function RankingsPage() {
         </div>
       ) : (
         <div className="reveal glass overflow-hidden">
-          <RankingsTable players={players} />
+          <RankingsTable players={players} historyMap={historyMap} />
         </div>
       )}
     </div>

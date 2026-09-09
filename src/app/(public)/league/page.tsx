@@ -1,18 +1,29 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
 
 export const revalidate = 30;
-export const metadata: Metadata = { title: "League | GT Table Tennis" };
+export const metadata = buildMeta("League", "Sign up for weekly league nights and view match results.");
+
+const DB_DOWN = (
+  <div className="max-w-4xl mx-auto px-4 py-16">
+    <p className="text-xs uppercase tracking-[0.15em] mb-2" style={{ color: "var(--gt-gold)" }}>Weekly Competition</p>
+    <h1 className="display text-4xl md:text-5xl mb-4" style={{ color: "var(--text-primary)" }}>Friday Night League</h1>
+    <div className="glass-sm p-8 text-center mt-8" style={{ color: "var(--text-muted)" }}>Database temporarily unavailable — check back soon.</div>
+  </div>
+);
 
 export default async function LeaguePage() {
-  const nights = await prisma.leagueNight.findMany({
-    orderBy: { date: "desc" },
-    include: {
-      season: { select: { id: true, name: true } },
-      registrations: { select: { id: true } },
-    },
-  });
+  let nights: Awaited<ReturnType<typeof prisma.leagueNight.findMany<{ include: { season: { select: { id: true; name: true } }; registrations: { select: { id: true } } } }>>>;
+  try {
+    nights = await prisma.leagueNight.findMany({
+      orderBy: { date: "desc" },
+      include: {
+        season: { select: { id: true, name: true } },
+        registrations: { select: { id: true } },
+      },
+    });
+  } catch { return DB_DOWN; }
 
   const openNight   = nights.find((n) => n.status === "registration_open");
   const inProgress  = nights.find((n) => n.status === "in_progress");

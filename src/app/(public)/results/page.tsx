@@ -1,15 +1,18 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: "Results | GT Table Tennis" };
+export const metadata = buildMeta("Results", "League night results, group standings, and match scores.");
 
 export default async function ResultsPage() {
-  const nights = await prisma.leagueNight.findMany({
-    orderBy: { date: "desc" },
-    include: { season: { select: { id: true, name: true } } },
-  });
+  let nights: Awaited<ReturnType<typeof prisma.leagueNight.findMany<{ include: { season: { select: { id: true; name: true } } } }>>> = [];
+  try {
+    nights = await prisma.leagueNight.findMany({
+      orderBy: { date: "desc" },
+      include: { season: { select: { id: true, name: true } } },
+    });
+  } catch {}
 
   const bySeason = new Map<string, { seasonName: string; nights: typeof nights }>();
   for (const n of nights) {

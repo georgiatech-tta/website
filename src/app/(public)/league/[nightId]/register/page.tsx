@@ -1,11 +1,7 @@
 import { prisma } from "@/lib/db";
 import { RegistrationForm } from "./RegistrationForm";
 
-export default async function RegisterPage({
-  params,
-}: {
-  params: Promise<{ nightId: string }>;
-}) {
+export default async function RegisterPage({ params }: { params: Promise<{ nightId: string }> }) {
   const { nightId } = await params;
 
   const night = await prisma.leagueNight.findUnique({
@@ -15,8 +11,11 @@ export default async function RegisterPage({
 
   if (!night || night.status !== "registration_open") {
     return (
-      <div className="max-w-xl mx-auto py-16 px-4 text-center">
-        <p className="text-gray-500 text-lg">Registration is closed for this night.</p>
+      <div className="max-w-xl mx-auto py-24 px-4 text-center">
+        <div className="glass p-10">
+          <p className="display text-xl mb-2" style={{ color: "var(--text-primary)" }}>Registration Closed</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Sign-ups are not currently open for this night.</p>
+        </div>
       </div>
     );
   }
@@ -35,33 +34,41 @@ export default async function RegisterPage({
   ]);
 
   const formattedDate = new Date(night.date).toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
   return (
-    <div className="max-w-xl mx-auto py-10 px-4 space-y-6">
+    <div className="max-w-xl mx-auto py-16 px-4 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--gt-navy)]">Register for League Night</h1>
-        <p className="text-gray-500 mt-1">{formattedDate} · {night.season.name}</p>
+        <p className="text-xs uppercase tracking-[0.18em] mb-2" style={{ color: "var(--gt-gold)" }}>
+          {night.season.name}
+        </p>
+        <h1 className="display text-3xl md:text-4xl mb-1" style={{ color: "var(--text-primary)" }}>
+          League Night Sign-Up
+        </h1>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{formattedDate}</p>
       </div>
 
       <RegistrationForm nightId={nightId} nightDate={formattedDate} players={players} />
 
-      <div className="bg-white rounded-xl border p-4">
-        <h2 className="font-semibold text-[var(--gt-navy)] mb-3">
+      <div className="glass p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--text-muted)" }}>
           Registered ({registrations.length})
         </h2>
         {registrations.length === 0 ? (
-          <p className="text-gray-400 text-sm">No registrations yet.</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>No registrations yet — be the first!</p>
         ) : (
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {registrations.map((r) => (
-              <li key={r.id} className="text-sm text-gray-700">
+              <li key={r.id} className="flex items-center gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: "var(--gt-gold)", opacity: 0.6 }}
+                />
                 {r.player?.name ?? r.guestName}
-                {!r.playerId && <span className="ml-2 text-xs text-gray-400">(guest)</span>}
+                {!r.playerId && (
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>(guest)</span>
+                )}
               </li>
             ))}
           </ul>

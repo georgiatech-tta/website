@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Sparkline from "@/components/ui/Sparkline";
 
 interface Player {
   id: string;
@@ -9,9 +11,14 @@ interface Player {
   usattRating: number | null;
 }
 
+interface Props {
+  players: Player[];
+  historyMap?: Record<string, number[]>;
+}
+
 const medals: Record<number, string> = { 0: "🥇", 1: "🥈", 2: "🥉" };
 
-export default function RankingsTable({ players }: { players: Player[] }) {
+export default function RankingsTable({ players, historyMap = {} }: Props) {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<"leagueRating" | "usattRating">("leagueRating");
 
@@ -58,37 +65,63 @@ export default function RankingsTable({ players }: { players: Player[] }) {
               <tr style={{ borderBottom: "1px solid var(--glass-border)" }}>
                 <th className="px-4 py-3 text-left w-14 text-xs uppercase tracking-widest" style={{ color: "var(--gt-gold)" }}>Rank</th>
                 <th className="px-4 py-3 text-left text-xs uppercase tracking-widest" style={{ color: "var(--gt-gold)" }}>Name</th>
+                <th className="hidden sm:table-cell px-4 py-3 text-center text-xs uppercase tracking-widest" style={{ color: "var(--gt-gold)" }}>Trend</th>
                 <th className="px-4 py-3 text-right text-xs uppercase tracking-widest" style={{ color: "var(--gt-gold)" }}>League</th>
                 <th className="px-4 py-3 text-right text-xs uppercase tracking-widest" style={{ color: "var(--gt-gold)" }}>USATT</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p, i) => (
-                <tr
-                  key={p.id}
-                  style={{
-                    borderBottom: "1px solid rgba(179,163,105,0.08)",
-                    background: i < 3 ? "rgba(179,163,105,0.05)" : "transparent",
-                  }}
-                >
-                  <td className="px-4 py-3 text-center">
-                    {medals[i] !== undefined ? (
-                      <span className="text-base">{medals[i]}</span>
-                    ) : (
-                      <span style={{ color: "var(--text-muted)" }}>{i + 1}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 font-medium" style={{ color: i < 3 ? "var(--text-primary)" : "var(--text-secondary)" }}>
-                    {p.name}
-                  </td>
-                  <td className="px-4 py-3 text-right font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {p.leagueRating}
-                  </td>
-                  <td className="px-4 py-3 text-right" style={{ color: "var(--text-muted)" }}>
-                    {p.usattRating ?? "—"}
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((p, i) => {
+                const hist = historyMap[p.id] ?? [];
+                return (
+                  <tr
+                    key={p.id}
+                    className="group"
+                    style={{
+                      borderBottom: "1px solid rgba(179,163,105,0.08)",
+                      background: i < 3 ? "rgba(179,163,105,0.05)" : "transparent",
+                    }}
+                  >
+                    <td className="px-4 py-3 text-center">
+                      {medals[i] !== undefined ? (
+                        <span className="text-base">{medals[i]}</span>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)" }}>{i + 1}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 font-medium" style={{ color: i < 3 ? "var(--text-primary)" : "var(--text-secondary)" }}>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/rankings/${p.id}`} className="hover:underline underline-offset-2">
+                          {p.name}
+                        </Link>
+                        <Link
+                          href={`/rankings/compare?a=${p.id}`}
+                          title="Compare with another player"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-1"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          ⇌
+                        </Link>
+                      </div>
+                    </td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-center">
+                      {hist.length >= 2 ? (
+                        <span title={`Rating trend (last ${hist.length} sessions)`} style={{ display: "inline-flex", alignItems: "center" }}>
+                          <Sparkline data={hist} width={64} height={24} />
+                        </span>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)" }}>—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {p.leagueRating}
+                    </td>
+                    <td className="px-4 py-3 text-right" style={{ color: "var(--text-muted)" }}>
+                      {p.usattRating ?? "—"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

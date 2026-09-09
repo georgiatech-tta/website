@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MailingSignup from "@/components/ui/MailingSignup";
 
 export default function Footer() {
   return (
@@ -25,6 +26,9 @@ export default function Footer() {
           <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "0.25rem" }}>
             NCTTA Georgia Division Champions: 2008–2015 · 2017 · 2023
           </p>
+        </div>
+        <div className="w-full md:w-64">
+          <MailingSignup compact />
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
           {[

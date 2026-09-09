@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { submitMatchScore } from "@/app/actions/matches";
+import GameChips from "@/components/ui/GameChips";
+import confetti from "canvas-confetti";
 
 interface Props {
   matchId: string;
-  player1: { id: string; name: string };
-  player2: { id: string; name: string };
+  player1: { id: string; name: string; rating?: number };
+  player2: { id: string; name: string; rating?: number };
 }
 
 export default function MatchScoreForm({ matchId, player1, player2 }: Props) {
@@ -14,98 +16,130 @@ export default function MatchScoreForm({ matchId, player1, player2 }: Props) {
   const [scoreP2, setScoreP2] = useState("");
   const [winnerId, setWinnerId] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [pending, startTransition] = useTransition();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!winnerId) { setStatus("error"); setMessage("Please select a winner."); return; }
-    setStatus("loading");
-    const res = await submitMatchScore(matchId, {
-      scoreP1,
-      scoreP2,
-      winnerId,
-      submitterEmail: email,
-    });
-    if ("error" in res) {
-      setStatus("error");
-      setMessage(res.error);
-    } else {
-      setStatus("success");
-      setMessage("Score submitted! Awaiting admin review.");
+  useEffect(() => {
+    if (success) {
+      confetti({ colors: ["#B3A369", "#d4c37a", "#ffffff"], particleCount: 80, spread: 70, origin: { y: 0.6 } });
     }
-  }
+  }, [success]);
 
-  if (status === "success") {
-    return <p className="text-green-600 text-sm">{message}</p>;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!winnerId) { setErrorMsg("Select a winner."); return; }
+    setErrorMsg("");
+    startTransition(async () => {
+      const res = await submitMatchScore(matchId, { scoreP1, scoreP2, winnerId, submitterEmail: email });
+      if ("error" in res) {
+        setErrorMsg(res.error);
+      } else {
+        setSuccess(true);
+      }
+    });
+  };
+
+  const winnerName = winnerId === player1.id ? player1.name : winnerId === player2.id ? player2.name : null;
+
+  if (success) {
+    return (
+      <div className="glass p-8 text-center flex flex-col items-center gap-4">
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
+          style={{ background: "rgba(179,163,105,0.15)", border: "1px solid rgba(179,163,105,0.3)" }}
+        >
+          🏆
+        </div>
+        {winnerName && (
+          <p className="display text-2xl" style={{ color: "var(--gt-gold)" }}>{winnerName} wins!</p>
+        )}
+        {scoreP1 && scoreP2 && (
+          <GameChips scoreP1={scoreP1} scoreP2={scoreP2} winnerId={winnerId} player1Id={player1.id} />
+        )}
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>Score submitted — awaiting admin review.</p>
+      </div>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="flex gap-3 flex-wrap">
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">
-            {player1.name} score
-          </label>
-          <input
-            type="text"
-            value={scoreP1}
-            onChange={(e) => setScoreP1(e.target.value)}
-            placeholder="11-7,9-11"
-            required
-            className="border rounded px-2 py-1 text-sm w-36"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">
-            {player2.name} score
-          </label>
-          <input
-            type="text"
-            value={scoreP2}
-            onChange={(e) => setScoreP2(e.target.value)}
-            placeholder="7-11,11-9"
-            required
-            className="border rounded px-2 py-1 text-sm w-36"
-          />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Score inputs */}
+      <div className="grid grid-cols-2 gap-3">
+        {[{ player: player1, val: scoreP1, set: setScoreP1 }, { player: player2, val: scoreP2, set: setScoreP2 }].map(({ player, val, set }) => (
+          <div key={player.id} className="glass-sm p-3">
+            <label className="block text-xs uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+              {player.name}
+            </label>
+            <input
+              type="text"
+              value={val}
+              onChange={(e) => set(e.target.value)}
+              placeholder="11-7,9-11,11-9"
+              required
+              className="w-full bg-transparent text-sm font-mono px-0 py-1 focus:outline-none border-b"
+              style={{ borderColor: "var(--glass-border)", color: "var(--text-primary)" }}
+            />
+            <p className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>Games as score1-score2, comma separated</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Winner toggle */}
+      <div>
+        <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Winner</p>
+        <div className="grid grid-cols-2 gap-3">
+          {[player1, player2].map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setWinnerId(p.id)}
+              className="glass p-4 text-left transition-all"
+              style={{
+                borderColor: winnerId === p.id ? "var(--gt-gold)" : "var(--glass-border)",
+                background: winnerId === p.id ? "rgba(179,163,105,0.08)" : "var(--glass-bg)",
+              }}
+            >
+              <p className="font-semibold" style={{ color: winnerId === p.id ? "var(--gt-gold)" : "var(--text-primary)" }}>
+                {p.name}
+              </p>
+              {p.rating != null && (
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>Rating: {p.rating}</p>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Email */}
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Winner</label>
-        <select
-          value={winnerId}
-          onChange={(e) => setWinnerId(e.target.value)}
-          required
-          className="border rounded px-2 py-1 text-sm"
-        >
-          <option value="">Select winner</option>
-          <option value={player1.id}>{player1.name}</option>
-          <option value={player2.id}>{player2.name}</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-xs text-gray-500 mb-1">
-          Your email (optional, for records)
+        <label className="block text-xs uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>
+          Your email (optional)
         </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="border rounded px-2 py-1 text-sm w-56"
+          placeholder="you@gatech.edu"
+          className="glass-sm w-full px-3 py-2 text-sm bg-transparent focus:outline-none"
+          style={{ color: "var(--text-primary)" }}
         />
       </div>
 
-      {status === "error" && <p className="text-red-600 text-sm">{message}</p>}
+      {errorMsg && (
+        <div className="glass-sm px-4 py-3 flex items-center gap-2 text-sm" style={{ borderColor: "rgba(248,113,113,0.3)", color: "#f87171" }}>
+          <span>!</span> {errorMsg}
+        </div>
+      )}
 
       <button
         type="submit"
-        disabled={status === "loading"}
-        className="bg-[var(--gt-navy)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:brightness-110 transition disabled:opacity-50"
+        disabled={pending}
+        className="btn-gold w-full justify-center"
       >
-        {status === "loading" ? "Submitting…" : "Submit Score"}
+        {pending ? (
+          <span className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--gt-navy)", borderTopColor: "transparent" }} />
+        ) : "Submit Score"}
       </button>
     </form>
   );

@@ -8,18 +8,19 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ albumId: string }> }): Promise<Metadata> {
   const { albumId } = await params;
-  const album = await prisma.album.findUnique({ where: { id: albumId }, select: { name: true } });
-  return { title: album ? `${album.name} | Gallery | GT Table Tennis` : "Not Found | GT Table Tennis" };
+  try {
+    const album = await prisma.album.findUnique({ where: { id: albumId }, select: { name: true } });
+    return { title: album ? `${album.name} | Gallery | GT Table Tennis` : "Not Found | GT Table Tennis" };
+  } catch { return { title: "Gallery | GT Table Tennis" }; }
 }
 
 export default async function AlbumPage({ params }: { params: Promise<{ albumId: string }> }) {
   const { albumId } = await params;
 
-  const album = await prisma.album.findUnique({
-    where: { id: albumId },
-    include: { photos: { orderBy: { order: "asc" } } },
-  });
-
+  let album: Awaited<ReturnType<typeof prisma.album.findUnique<{ include: { photos: { orderBy: { order: "asc" } } } }>>> | null = null;
+  try {
+    album = await prisma.album.findUnique({ where: { id: albumId }, include: { photos: { orderBy: { order: "asc" } } } });
+  } catch {}
   if (!album) notFound();
 
   return (

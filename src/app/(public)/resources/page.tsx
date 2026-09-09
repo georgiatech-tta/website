@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: "Resources | GT Table Tennis" };
+export const metadata = buildMeta("Resources", "Useful links and resources for GT Table Tennis members.");
 
 const CATEGORY_LABELS: Record<string, string> = {
   equipment:          "Equipment Stores",
@@ -15,7 +15,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 const categoryOrder = ["equipment", "coaching-general", "coaching-forehand", "coaching-backhand", "general"];
 
 export default async function ResourcesPage() {
-  const links = await prisma.resourceLink.findMany({ orderBy: [{ category: "asc" }, { order: "asc" }] });
+  let links: Awaited<ReturnType<typeof prisma.resourceLink.findMany>> = [];
+  try { links = await prisma.resourceLink.findMany({ orderBy: [{ category: "asc" }, { order: "asc" }] }); } catch {}
 
   const grouped = new Map<string, typeof links>();
   for (const link of links) {

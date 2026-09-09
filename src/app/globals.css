@@ -138,6 +138,30 @@ body::before {
   transform: translateY(-3px);
 }
 
+/* Card micro-interactions — add .card-title and .card-arrow inside .glass-hover */
+.glass-hover .card-title {
+  transition: color var(--dur-fast) var(--ease-smooth);
+}
+.glass-hover:hover .card-title {
+  color: var(--gt-gold-light);
+}
+.glass-hover .card-arrow {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity var(--dur-fast) var(--ease-smooth), transform var(--dur-fast) var(--ease-spring);
+}
+.glass-hover:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Scroll-to-top ping ring ── */
+@keyframes ping-once {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
 /* ── Scroll Reveal ── */
 .reveal {
   opacity: 0;
@@ -268,6 +292,46 @@ body::before {
   80%  { transform: translate(15px, -10px) scale(0.98); }
   100% { transform: translate(0, 0) scale(1); }
 }
+
+/* ── Album stacked hover ── */
+.album-card { position: relative; }
+.album-card-ghost {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: transform 350ms var(--ease-spring), opacity 350ms;
+  z-index: 0;
+}
+.album-card-cover { position: relative; z-index: 1; transition: transform 500ms var(--ease-smooth); }
+.album-card:hover .album-card-ghost:nth-of-type(1) { opacity: 1; transform: rotate(-5deg) translate(-6px, 4px) scale(0.97); }
+.album-card:hover .album-card-ghost:nth-of-type(2) { opacity: 0.55; transform: rotate(3.5deg) translate(5px, 8px) scale(0.95); }
+.album-card:hover .album-card-cover { transform: scale(1.03); }
+
+/* ── News prose ── */
+.prose-gttta { color: var(--text-secondary); line-height: 1.8; }
+.prose-gttta p { margin-bottom: 1.25rem; }
+.prose-gttta h2, .prose-gttta h3 { font-family: var(--font-display, var(--font-sans)); font-weight: 700; color: var(--gt-gold); margin: 2rem 0 0.75rem; }
+.prose-gttta h2 { font-size: 1.5rem; }
+.prose-gttta h3 { font-size: 1.2rem; }
+.prose-gttta a { color: var(--gt-gold); text-decoration: underline; text-underline-offset: 3px; }
+.prose-gttta strong { color: var(--text-primary); }
+.prose-gttta ul, .prose-gttta ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+.prose-gttta li { margin-bottom: 0.35rem; }
+.prose-gttta blockquote {
+  background: var(--glass-bg);
+  border-left: 3px solid var(--gt-gold);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 0.75rem 1.25rem;
+  margin: 1.5rem 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ── Kiosk mode ── */
+body[data-kiosk] nav,
+body[data-kiosk] footer { display: none; }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; }

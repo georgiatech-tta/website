@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: "About | GT Table Tennis" };
+export const metadata = buildMeta("About", "Learn about Georgia Tech Table Tennis Club, our officers, and how to join.");
 
 export default async function AboutPage() {
-  const officers = await prisma.officer.findMany({ orderBy: { order: "asc" } });
+  let officers: Awaited<ReturnType<typeof prisma.officer.findMany>> = [];
+  try { officers = await prisma.officer.findMany({ orderBy: { order: "asc" } }); } catch {}
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">

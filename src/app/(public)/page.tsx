@@ -1,25 +1,29 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import ParallaxHero from "@/components/ParallaxHero";
+import ExceptionBanner from "@/components/ui/ExceptionBanner";
+import MailingSignup from "@/components/ui/MailingSignup";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [news, schedule, openNight] = await Promise.all([
-    prisma.newsPost.findMany({
-      where: { published: true },
-      orderBy: { publishedAt: "desc" },
-      take: 3,
-    }),
-    prisma.scheduleEntry.findMany({
-      where: { active: true },
-      orderBy: { dayOfWeek: "asc" },
-    }),
-    prisma.leagueNight.findFirst({
-      where: { status: "registration_open" },
-      include: { registrations: { select: { id: true } } },
-    }),
-  ]);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const twoWeeks = new Date(today);
+  twoWeeks.setDate(twoWeeks.getDate() + 14);
+
+  let news: Awaited<ReturnType<typeof prisma.newsPost.findMany>> = [];
+  let schedule: Awaited<ReturnType<typeof prisma.scheduleEntry.findMany>> = [];
+  let openNight: Awaited<ReturnType<typeof prisma.leagueNight.findFirst<{ include: { registrations: { select: { id: true } } } }>>> = null;
+  let upcomingExceptions: Awaited<ReturnType<typeof prisma.scheduleException.findMany>> = [];
+  try {
+    [news, schedule, openNight, upcomingExceptions] = await Promise.all([
+      prisma.newsPost.findMany({ where: { published: true }, orderBy: { publishedAt: "desc" }, take: 3 }),
+      prisma.scheduleEntry.findMany({ where: { active: true }, orderBy: { dayOfWeek: "asc" } }),
+      prisma.leagueNight.findFirst({ where: { status: "registration_open" }, include: { registrations: { select: { id: true } } } }),
+      prisma.scheduleException.findMany({ where: { date: { gte: today, lte: twoWeeks }, cancelled: true }, orderBy: { date: "asc" }, take: 3 }),
+    ]);
+  } catch {}
 
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -127,6 +131,11 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ── Exception Banner ── */}
+      {upcomingExceptions.length > 0 && (
+        <ExceptionBanner exceptions={upcomingExceptions.map((e) => ({ id: e.id, date: e.date, reason: e.reason }))} />
+      )}
+
       {/* ── Schedule ── */}
       <section className="max-w-4xl mx-auto px-4 py-16">
         <p className="reveal-left text-xs uppercase tracking-[0.18em] mb-2" style={{ color: "var(--gt-gold)" }}>
@@ -148,7 +157,7 @@ export default async function HomePage() {
                 <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--gt-gold)" }}>
                   {days[s.dayOfWeek]}s
                 </p>
-                <p className="font-semibold text-lg" style={{ color: "var(--text-primary)" }}>
+                <p className="card-title font-semibold text-lg" style={{ color: "var(--text-primary)" }}>
                   {s.startTime} – {s.endTime}
                 </p>
                 <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
@@ -187,7 +196,7 @@ export default async function HomePage() {
               $30/semester dues. Register on Discord, fill out the club form, and show up on Court 6.
               New members get one free practice to try it out first.
             </p>
-            <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-wrap gap-3 justify-center mb-8">
               <a href="https://discord.gg/xAqGEZdCg7" target="_blank" rel="noopener noreferrer" className="btn-gold">
                 Join Discord
               </a>
@@ -199,6 +208,9 @@ export default async function HomePage() {
               >
                 Registration Form
               </a>
+            </div>
+            <div className="max-w-sm mx-auto w-full">
+              <MailingSignup />
             </div>
           </div>
         </div>
@@ -223,8 +235,8 @@ export default async function HomePage() {
                 <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>
                   {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : ""}
                 </p>
-                <h3 className="font-semibold mb-2 line-clamp-2" style={{ color: "var(--text-primary)" }}>
-                  {post.title}
+                <h3 className="card-title font-semibold mb-2 line-clamp-2" style={{ color: "var(--text-primary)" }}>
+                  {post.title} <span className="card-arrow">→</span>
                 </h3>
                 <p className="text-sm line-clamp-3" style={{ color: "var(--text-secondary)" }}>
                   {post.body.replace(/<[^>]+>/g, "")}

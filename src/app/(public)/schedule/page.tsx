@@ -1,16 +1,10 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
+import ScheduleCardClient from "@/components/ui/ScheduleCardClient";
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: "Schedule | GT Table Tennis" };
+export const metadata = buildMeta("Schedule", "Practice times and upcoming changes for GT Table Tennis.");
 
-const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-const typeBadgeStyle: Record<string, { bg: string; color: string }> = {
-  league:   { bg: "rgba(179,163,105,0.2)",  color: "var(--gt-gold-light)" },
-  training: { bg: "rgba(96,165,250,0.15)", color: "#93c5fd" },
-  casual:   { bg: "rgba(74,222,128,0.15)", color: "#86efac" },
-};
 
 export default async function SchedulePage() {
   const today = new Date();
@@ -19,7 +13,7 @@ export default async function SchedulePage() {
   const [schedule, exceptions] = await Promise.all([
     prisma.scheduleEntry.findMany({ where: { active: true }, orderBy: { dayOfWeek: "asc" } }),
     prisma.scheduleException.findMany({ where: { date: { gte: today } }, orderBy: { date: "asc" } }),
-  ]);
+  ]).catch(() => [[], []]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
@@ -37,29 +31,9 @@ export default async function SchedulePage() {
         <p style={{ color: "var(--text-secondary)" }}>Schedule not posted yet — check back soon.</p>
       ) : (
         <div className="grid sm:grid-cols-3 gap-4 mb-14">
-          {schedule.map((s, i) => {
-            const badge = typeBadgeStyle[s.type] ?? { bg: "rgba(255,255,255,0.1)", color: "var(--text-secondary)" };
-            return (
-              <div key={s.id} className={`reveal stagger-${i + 1} glass glass-hover p-6`}>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--gt-gold)" }}>
-                  {days[s.dayOfWeek]}s
-                </p>
-                <p className="font-bold text-xl mb-1" style={{ color: "var(--text-primary)" }}>
-                  {s.startTime} – {s.endTime}
-                </p>
-                <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>{s.location}</p>
-                <span
-                  className="text-xs font-semibold px-2 py-0.5 rounded-full capitalize"
-                  style={{ background: badge.bg, color: badge.color }}
-                >
-                  {s.type}
-                </span>
-                {s.notes && (
-                  <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{s.notes}</p>
-                )}
-              </div>
-            );
-          })}
+          {schedule.map((s, i) => (
+            <ScheduleCardClient key={s.id} entry={s} index={i} />
+          ))}
         </div>
       )}
 

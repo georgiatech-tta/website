@@ -1,15 +1,13 @@
 import { prisma } from "@/lib/db";
-import type { Metadata } from "next";
+import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
 
 export const revalidate = 60;
-export const metadata: Metadata = { title: "News | GT Table Tennis" };
+export const metadata = buildMeta("News", "Latest announcements and news from GT Table Tennis.");
 
 export default async function NewsPage() {
-  const posts = await prisma.newsPost.findMany({
-    where: { published: true },
-    orderBy: { publishedAt: "desc" },
-  });
+  let posts: Awaited<ReturnType<typeof prisma.newsPost.findMany>> = [];
+  try { posts = await prisma.newsPost.findMany({ where: { published: true }, orderBy: { publishedAt: "desc" } }); } catch {}
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
