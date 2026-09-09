@@ -20,6 +20,13 @@ const typeBadgeStyle: Record<string, { bg: string; color: string }> = {
   casual:   { bg: "rgba(74,222,128,0.15)", color: "#86efac" },
 };
 
+function fmtTime(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour} ${period}` : `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 function buildGoogleCalUrl(entry: Entry): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -50,7 +57,7 @@ export default function ScheduleCardClient({ entry, index }: { entry: Entry; ind
   const badge = typeBadgeStyle[entry.type] ?? { bg: "rgba(255,255,255,0.1)", color: "var(--text-secondary)" };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(`${DAYS_LONG[entry.dayOfWeek]}s ${entry.startTime}–${entry.endTime} · ${entry.location}`);
+    navigator.clipboard.writeText(`${DAYS_LONG[entry.dayOfWeek]}s ${fmtTime(entry.startTime)}–${fmtTime(entry.endTime)} · ${entry.location}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -90,7 +97,7 @@ export default function ScheduleCardClient({ entry, index }: { entry: Entry; ind
         {DAYS_LONG[entry.dayOfWeek]}s
       </p>
       <p className="card-title font-bold text-xl mb-1" style={{ color: "var(--text-primary)" }}>
-        {entry.startTime} – {entry.endTime}
+        {fmtTime(entry.startTime)} – {fmtTime(entry.endTime)}
       </p>
       <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>{entry.location}</p>
       <span
@@ -114,7 +121,7 @@ export default function ScheduleCardClient({ entry, index }: { entry: Entry; ind
         </button>
         {calOpen && (
           <div
-            className="glass-sm absolute bottom-full left-0 mb-2 py-2 w-44 z-10 flex flex-col"
+            className="glass-sm absolute top-full left-0 mt-1 py-2 w-44 z-50 flex flex-col"
             style={{ boxShadow: "var(--glass-shadow)" }}
           >
             <a

@@ -30,11 +30,22 @@ export default async function SchedulePage() {
       {schedule.length === 0 ? (
         <p style={{ color: "var(--text-secondary)" }}>Schedule not posted yet — check back soon.</p>
       ) : (
-        <div className="grid sm:grid-cols-3 gap-4 mb-14">
-          {schedule.map((s, i) => (
-            <ScheduleCardClient key={s.id} entry={s} index={i} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-3 gap-4 mb-6">
+            {schedule.map((s, i) => (
+              <ScheduleCardClient key={s.id} entry={s} index={i} />
+            ))}
+          </div>
+          <div className="reveal flex flex-wrap gap-3 mb-14">
+            <a
+              href="/api/calendar/all"
+              download="gttta-full-schedule.ics"
+              className="btn-glass text-xs"
+            >
+              ↓ Download full schedule (.ics)
+            </a>
+          </div>
+        </>
       )}
 
       {/* Exceptions */}
