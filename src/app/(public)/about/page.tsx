@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { buildMeta } from "@/lib/metadata";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 export const metadata = buildMeta("About", "Learn about Georgia Tech Table Tennis Club, our officers, and how to join.");
 
 export default async function AboutPage() {

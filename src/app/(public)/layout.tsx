@@ -1,6 +1,3 @@
-// ponytail: force-dynamic so all public pages run at request time (DB not available at build)
-export const dynamic = "force-dynamic";
-
 import Nav from "@/components/ui/Nav";
 import Footer from "@/components/ui/Footer";
 import ScrollReveal from "@/components/ScrollReveal";

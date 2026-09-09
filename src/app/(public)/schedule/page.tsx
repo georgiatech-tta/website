@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { buildMeta } from "@/lib/metadata";
 import ScheduleCardClient from "@/components/ui/ScheduleCardClient";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 export const metadata = buildMeta("Schedule", "Practice times and upcoming changes for GT Table Tennis.");
 
 

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { buildMeta } from "@/lib/metadata";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 export const metadata = buildMeta("Resources", "Useful links and resources for GT Table Tennis members.");
 
 const CATEGORY_LABELS: Record<string, string> = {

@@ -3,7 +3,7 @@ import { buildMeta } from "@/lib/metadata";
 import Link from "next/link";
 import EmptyState from "@/components/ui/EmptyState";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 export const metadata = buildMeta("Gallery", "Photo albums from GT Table Tennis events and league nights.");
 
 export default async function GalleryPage() {

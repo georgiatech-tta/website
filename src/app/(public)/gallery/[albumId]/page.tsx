@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import PhotoGrid from "./Lightbox";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ albumId: string }> }): Promise<Metadata> {
   const { albumId } = await params;

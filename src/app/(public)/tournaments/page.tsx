@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { buildMeta } from "@/lib/metadata";
 import TournamentGrid from "./TournamentGrid";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 export const metadata = buildMeta("Tournaments", "Upcoming and past table tennis tournaments.");
 
 export default async function TournamentsPage() {
