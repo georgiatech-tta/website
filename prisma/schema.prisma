@@ -94,6 +94,7 @@ model LeagueNight {
   seasonId      String
   season        Season                     @relation(fields: [seasonId], references: [id])
   status        String                     @default("registration_open") // "registration_open" | "in_progress" | "completed"
+  isTryout      Boolean                    @default(false)
   groups        Group[]
   registrations LeagueNightRegistration[]
   auditLog      AuditLog[]

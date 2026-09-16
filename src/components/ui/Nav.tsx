@@ -10,6 +10,7 @@ const links = [
   { href: "/league", label: "League" },
   { href: "/rankings", label: "Rankings" },
   { href: "/news", label: "News" },
+  { href: "/tryouts", label: "Tryouts" },
   { href: "/tournaments", label: "Tournaments" },
   { href: "/about", label: "About" },
 ];

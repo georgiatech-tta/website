@@ -74,7 +74,15 @@ export async function approveMatch(
       },
     });
 
-    if (remaining === 0) await finalizeNightRatings(nightId);
+    if (remaining === 0) {
+      const night = await prisma.leagueNight.findUnique({ where: { id: nightId }, select: { isTryout: true } });
+      if (night?.isTryout) {
+        await prisma.leagueNight.update({ where: { id: nightId }, data: { status: "completed" } });
+        revalidatePath("/tryouts");
+      } else {
+        await finalizeNightRatings(nightId);
+      }
+    }
 
     revalidatePath(`/admin/league/${nightId}`);
     return { success: true };
@@ -108,6 +116,10 @@ export async function rejectMatch(
 
 async function finalizeNightRatings(nightId: string) {
   await prisma.$transaction(async (tx) => {
+    // Guard against double-finalization from concurrent approvals
+    const check = await tx.leagueNight.findUnique({ where: { id: nightId }, select: { status: true } });
+    if (check?.status === "completed") return;
+
     const night = await tx.leagueNight.findUnique({
       where: { id: nightId },
       include: {

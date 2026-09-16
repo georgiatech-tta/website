@@ -8,6 +8,17 @@ export const metadata = buildMeta("League", "Fall 2025 tryout schedule and regis
 // Flip to false when tryouts are over to restore regular league page
 const TRYOUTS_ACTIVE = true;
 
+const GROUPS: { name: string; note?: string; players: string[] }[] = [
+  { name: "Group 1", players: ["Stanley Hsu", "Gautam Pradhan", "Boyuan (Jerry) Yao"] },
+  { name: "Group 2", players: ["Mu Du", "Noah Padtha", "Gayatri Tanksali"] },
+  { name: "Group 3", players: ["Mehrad Abbaszadeh Minab", "Jayden Lee", "Billy Ho", "Aarush Gupta"] },
+  { name: "Group 4", note: "*", players: ["Kevin Jiao", "Grace Wang", "Jaeeun Lee"] },
+  { name: "Group 5", players: ["Johnathan Shih", "Jackson Holley", "Sundar Pranesh Jayapriya Sukumar", "Deep Inder Mohan"] },
+  { name: "Group 6", players: ["Roshan Patel", "Joshua Diao", "Sean Matos", "Man To Tam"] },
+  { name: "Group 7", players: ["Tobias Wang", "Rishi Motkur", "Zhijing (Claire) Huang", "Helena He"] },
+  { name: "Group 8", players: ["Nathan Lee", "Anvit Divekar", "Sungchan Yi", "Nicholas Jankovic"] },
+];
+
 const TRYOUT_DATES = [
   {
     date: "Wednesday, September 17",
@@ -45,6 +56,15 @@ const DB_DOWN = (
 
 export default async function LeaguePage() {
   if (TRYOUTS_ACTIVE) {
+    let tryoutNightId: string | null = null;
+    try {
+      const tryoutNight = await prisma.leagueNight.findFirst({
+        where: { isTryout: true, status: "in_progress" },
+        select: { id: true },
+      });
+      tryoutNightId = tryoutNight?.id ?? null;
+    } catch {}
+
     return (
       <div className="max-w-4xl mx-auto px-4 py-16">
         {/* Header */}
@@ -91,6 +111,28 @@ export default async function LeaguePage() {
           </a>
         </div>
 
+        {/* Score entry banner — shown once tryout night is seeded */}
+        {tryoutNightId && (
+          <div className="reveal glass p-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: "var(--gt-gold)" }}>
+                Tryouts in progress
+              </p>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                Any player or officer can submit match scores from their phone.
+              </p>
+            </div>
+            <div className="flex gap-3 shrink-0">
+              <Link href={`/league/${tryoutNightId}/scores`} className="btn-gold text-sm">
+                Enter Scores →
+              </Link>
+              <Link href="/tryouts" className="btn-glass text-sm">
+                View Brackets
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Tryout dates */}
         <div className="grid sm:grid-cols-3 gap-4 mb-12">
           {TRYOUT_DATES.map((t, i) => (
@@ -122,6 +164,33 @@ export default async function LeaguePage() {
               Bracket play until one winner remains. Remaining Round Robin results also determine{" "}
               <strong style={{ color: "var(--text-primary)" }}>Group A / Group B</strong> league placements for all players.
             </p>
+          </div>
+        </div>
+
+        {/* Group Brackets */}
+        <div className="reveal glass p-6 mb-10">
+          <h2 className="display text-lg mb-1" style={{ color: "var(--gt-gold)" }}>Group Brackets</h2>
+          <p className="text-xs mb-5" style={{ color: "var(--text-muted)" }}>
+            Top 2 from each group advance · All matches BO3 · 8 groups via Snake method
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {GROUPS.map((g) => (
+              <div key={g.name} className="glass-sm p-4">
+                <p className="text-xs uppercase tracking-widest mb-3 font-semibold" style={{ color: "var(--gt-gold)" }}>
+                  {g.name}{g.note}
+                </p>
+                <ol className="space-y-1.5">
+                  {g.players.map((player, i) => (
+                    <li key={player} className="flex items-center gap-2 text-sm">
+                      <span className="text-xs w-4 shrink-0 text-right" style={{ color: "var(--text-muted)" }}>
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span style={{ color: "var(--text-secondary)" }}>{player}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
           </div>
         </div>
 
