@@ -136,6 +136,7 @@ export default async function TryoutsPage() {
             Brackets not yet published
           </p>
           {dbError && <p className="text-xs mt-4 text-red-400 break-all">{dbError}</p>}
+          <p className="text-xs mt-2 text-yellow-400">{process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).host : "DB_URL unset"}</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
