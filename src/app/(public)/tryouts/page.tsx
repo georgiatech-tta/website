@@ -63,7 +63,6 @@ function getTopTwo(entries: Entry[], wins: Map<string, number>, matches: Match[]
 
 export default async function TryoutsPage() {
   let night: { id: string; groups: Group[] } | null = null;
-  let dbError: string | null = null;
   try {
     night = await prisma.leagueNight.findFirst({
       where: { isTryout: true },
@@ -96,7 +95,7 @@ export default async function TryoutsPage() {
         },
       },
     });
-  } catch (e) { console.error("tryouts DB error:", e); dbError = String(e); }
+  } catch {}
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-16">
@@ -135,8 +134,6 @@ export default async function TryoutsPage() {
           <p className="display text-2xl" style={{ color: "var(--text-primary)" }}>
             Brackets not yet published
           </p>
-          {dbError && <p className="text-xs mt-4 text-red-400 break-all">{dbError}</p>}
-          <p className="text-xs mt-2 text-yellow-400">{process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).host : "DB_URL unset"}</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
