@@ -338,6 +338,8 @@ body[data-kiosk] footer { display: none; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   body::before { animation: none; }
