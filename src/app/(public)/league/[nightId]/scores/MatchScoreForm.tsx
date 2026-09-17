@@ -144,7 +144,7 @@ export default function MatchScoreForm({ matchId, me, them, iAmPlayer1 }: Props)
                 <button
                   type="button"
                   onClick={() => removeGame(idx)}
-                  className="text-gray-300 hover:text-red-400 text-lg leading-none w-5"
+                  className="text-gray-400 hover:text-red-500 text-lg leading-none w-5"
                   aria-label="Remove game"
                 >
                   ×

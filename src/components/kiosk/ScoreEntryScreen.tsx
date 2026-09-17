@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import confetti from "canvas-confetti";
 import { submitMatchScore } from "@/app/actions/matches";
 import type { KioskPlayer, KioskMatch } from "./KioskShell";
@@ -13,80 +13,71 @@ interface Props {
   onSuccess: (updated: Partial<KioskMatch>) => void;
 }
 
-interface Game {
-  p1: number;
-  p2: number;
-}
+interface Game { p1: string; p2: string }
 
-function isValidGame(g: Game, index: number, total: number): boolean {
-  const maxScore = Math.max(g.p1, g.p2);
-  const diff = Math.abs(g.p1 - g.p2);
-  const target = index >= 4 ? 7 : 11;
-  return maxScore >= target && diff >= 2;
+function detectWinner(games: Game[]): "p1" | "p2" | null {
+  let p1Wins = 0, p2Wins = 0;
+  for (const g of games) {
+    const a = parseInt(g.p1) || 0;
+    const b = parseInt(g.p2) || 0;
+    if (a > b) p1Wins++;
+    else if (b > a) p2Wins++;
+  }
+  if (p1Wins >= 2) return "p1";
+  if (p2Wins >= 2) return "p2";
+  return null;
 }
 
 export default function ScoreEntryScreen({ match, player1, player2, onBack, onSuccess }: Props) {
-  const [games, setGames] = useState<Game[]>([{ p1: 0, p2: 0 }]);
-  const [winnerId, setWinnerId] = useState<string | null>(null);
+  const [games, setGames] = useState<Game[]>([{ p1: "", p2: "" }, { p1: "", p2: "" }, { p1: "", p2: "" }]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const p1Name = player1?.name ?? "Player 1";
   const p2Name = player2?.name ?? "Player 2";
+  const winner = detectWinner(games);
 
-  const adjust = (gameIdx: number, side: "p1" | "p2", delta: number) => {
-    setGames((prev) =>
-      prev.map((g, i) =>
-        i === gameIdx ? { ...g, [side]: Math.max(0, g[side] + delta) } : g
-      )
-    );
+  const updateGame = (idx: number, side: "p1" | "p2", val: string) => {
+    const next = [...games];
+    next[idx] = { ...next[idx], [side]: val.replace(/\D/g, "").slice(0, 3) };
+    setGames(next);
   };
 
-  const setScore = (gameIdx: number, side: "p1" | "p2", val: string) => {
-    const n = parseInt(val, 10);
-    if (isNaN(n) || n < 0) return;
-    setGames((prev) => prev.map((g, i) => (i === gameIdx ? { ...g, [side]: n } : g)));
+  const addGame = () => {
+    if (games.length < 7) setGames([...games, { p1: "", p2: "" }]);
   };
 
-  const allValid = games.every((g, i) => isValidGame(g, i, games.length));
+  const removeGame = (idx: number) => {
+    if (games.length > 2) setGames(games.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = () => {
-    if (!winnerId) { setError("Select a winner."); return; }
-    if (!allValid) { setError("All game scores must be valid (e.g. 11-7 or 11-9)."); return; }
-
-    const scoreP1 = games.map((g) => `${g.p1}-${g.p2}`).join(",");
-    const scoreP2 = games.map((g) => `${g.p2}-${g.p1}`).join(",");
-
+    if (!winner) { setError("Winner not yet determined — enter all game scores."); return; }
+    const filled = games.filter((g) => g.p1 !== "" || g.p2 !== "");
+    const scoreP1 = filled.map((g) => `${parseInt(g.p1) || 0}-${parseInt(g.p2) || 0}`).join(",");
+    const scoreP2 = filled.map((g) => `${parseInt(g.p2) || 0}-${parseInt(g.p1) || 0}`).join(",");
+    const winnerId = winner === "p1" ? match.player1Id : match.player2Id;
+    setError(null);
     startTransition(async () => {
-      const result = await submitMatchScore(match.id, {
-        scoreP1,
-        scoreP2,
-        winnerId,
-        submitterEmail: "",
-      });
+      const result = await submitMatchScore(match.id, { scoreP1, scoreP2, winnerId, submitterEmail: "" });
       if ("error" in result) {
         setError(result.error);
       } else {
         setSuccess(true);
-        confetti({
-          colors: ["#B3A369", "#d4c37a", "#ffffff"],
-          particleCount: 100,
-          spread: 80,
-          origin: { y: 0.5 },
-        });
+        confetti({ colors: ["#B3A369", "#d4c37a", "#ffffff"], particleCount: 100, spread: 80, origin: { y: 0.5 } });
         onSuccess({ scoreP1, scoreP2, winnerId, status: "pending_approval" });
       }
     });
   };
 
   if (success) {
-    const winnerName = winnerId === match.player1Id ? p1Name : p2Name;
+    const winnerName = winner === "p1" ? p1Name : p2Name;
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
         <p className="text-6xl mb-4">🏆</p>
         <p className="display text-4xl mb-2" style={{ color: "var(--gt-gold)" }}>{winnerName}</p>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>Score submitted — awaiting review</p>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Score submitted — awaiting review</p>
       </div>
     );
   }
@@ -95,79 +86,88 @@ export default function ScoreEntryScreen({ match, player1, player2, onBack, onSu
     <div className="min-h-screen p-6">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={onBack} className="text-sm" style={{ color: "var(--text-muted)" }}>
-            ← Back
-          </button>
+          <button onClick={onBack} className="text-sm" style={{ color: "var(--gt-gold)" }}>← Back</button>
           <p className="text-xs uppercase tracking-widest" style={{ color: "var(--gt-gold)" }}>Score Entry</p>
           <div style={{ width: 60 }} />
         </div>
 
-        {/* Winner toggle */}
-        <p className="text-xs uppercase tracking-widest mb-3 text-center" style={{ color: "var(--text-muted)" }}>
-          Winner
-        </p>
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {[
-            { id: match.player1Id, name: p1Name, rating: player1?.leagueRating },
-            { id: match.player2Id, name: p2Name, rating: player2?.leagueRating },
-          ].map((p) => {
-            const selected = winnerId === p.id;
+        {/* Player column headers */}
+        <div className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2 mb-3">
+          <span className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{p1Name}</span>
+          <span className="w-6" />
+          <span className="text-sm font-semibold truncate text-right" style={{ color: "var(--text-primary)" }}>{p2Name}</span>
+          <span className="w-5" />
+        </div>
+
+        {/* Game rows */}
+        <div className="space-y-2 mb-4">
+          {games.map((g, idx) => {
+            const a = parseInt(g.p1) || 0;
+            const b = parseInt(g.p2) || 0;
+            const p1Won = g.p1 !== "" && g.p2 !== "" && a > b;
+            const p2Won = g.p1 !== "" && g.p2 !== "" && b > a;
             return (
-              <button
-                key={p.id}
-                onClick={() => setWinnerId(p.id)}
-                className="glass p-5 text-center transition-all"
-                style={{
-                  boxShadow: selected ? "0 0 0 2px var(--gt-gold)" : "none",
-                  background: selected ? "rgba(179,163,105,0.1)" : undefined,
-                  minHeight: 80,
-                }}
-              >
-                <p className="font-semibold text-lg" style={{ color: selected ? "var(--gt-gold)" : "var(--text-primary)" }}>
-                  {p.name}
-                </p>
-                {p.rating != null && (
-                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{p.rating}</p>
-                )}
-              </button>
+              <div key={idx} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={g.p1}
+                  onChange={(e) => updateGame(idx, "p1", e.target.value)}
+                  placeholder="0"
+                  className="text-center text-xl font-semibold rounded-lg py-3 px-1 w-full focus:outline-none"
+                  style={{
+                    background: p1Won ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.08)",
+                    border: p1Won ? "1px solid rgba(74,222,128,0.4)" : "1px solid var(--glass-border)",
+                    color: p1Won ? "#4ade80" : "var(--text-primary)",
+                  }}
+                />
+                <span className="text-center text-sm w-6" style={{ color: "var(--text-secondary)" }}>—</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={g.p2}
+                  onChange={(e) => updateGame(idx, "p2", e.target.value)}
+                  placeholder="0"
+                  className="text-center text-xl font-semibold rounded-lg py-3 px-1 w-full focus:outline-none"
+                  style={{
+                    background: p2Won ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.08)",
+                    border: p2Won ? "1px solid rgba(74,222,128,0.4)" : "1px solid var(--glass-border)",
+                    color: p2Won ? "#4ade80" : "var(--text-primary)",
+                  }}
+                />
+                {games.length > 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeGame(idx)}
+                    className="text-lg leading-none w-5"
+                    style={{ color: "var(--text-secondary)" }}
+                    aria-label="Remove game"
+                  >×</button>
+                ) : <span className="w-5" />}
+              </div>
             );
           })}
         </div>
 
-        {/* Game scores */}
-        <p className="text-xs uppercase tracking-widest mb-3 text-center" style={{ color: "var(--text-muted)" }}>
-          Games
-        </p>
-        <div className="space-y-3 mb-4">
-          {games.map((g, idx) => (
-            <div key={idx} className="glass p-4 flex items-center gap-3">
-              <p className="text-xs w-12 text-center" style={{ color: "var(--text-muted)" }}>G{idx + 1}</p>
-              <ScoreInput
-                value={g.p1}
-                label={p1Name}
-                onInc={() => adjust(idx, "p1", 1)}
-                onDec={() => adjust(idx, "p1", -1)}
-                onChange={(v) => setScore(idx, "p1", v)}
-              />
-              <span style={{ color: "var(--text-muted)" }}>–</span>
-              <ScoreInput
-                value={g.p2}
-                label={p2Name}
-                onInc={() => adjust(idx, "p2", 1)}
-                onDec={() => adjust(idx, "p2", -1)}
-                onChange={(v) => setScore(idx, "p2", v)}
-              />
-            </div>
-          ))}
-        </div>
+        {/* Winner indicator */}
+        {winner && (
+          <div
+            className="text-center text-sm font-semibold py-3 rounded-lg mb-4"
+            style={{ background: "rgba(179,163,105,0.15)", color: "var(--gt-gold)", border: "1px solid rgba(179,163,105,0.3)" }}
+          >
+            {winner === "p1" ? p1Name : p2Name} wins
+          </div>
+        )}
 
-        <button
-          onClick={() => setGames((prev) => [...prev, { p1: 0, p2: 0 }])}
-          className="w-full mb-6 py-2 text-sm"
-          style={{ color: "var(--text-muted)", border: "1px dashed var(--glass-border)", borderRadius: "var(--r-sm)" }}
-        >
-          + Add game
-        </button>
+        {!winner && games.length < 7 && (
+          <button
+            onClick={addGame}
+            className="w-full mb-4 py-2 text-sm"
+            style={{ color: "var(--text-secondary)", border: "1px dashed var(--glass-border)", borderRadius: "var(--r-sm)" }}
+          >
+            + Add game
+          </button>
+        )}
 
         {error && (
           <div className="glass-sm px-4 py-3 mb-4 text-sm" style={{ color: "#f87171", borderLeft: "3px solid #f87171" }}>
@@ -177,9 +177,9 @@ export default function ScoreEntryScreen({ match, player1, player2, onBack, onSu
 
         <button
           onClick={handleSubmit}
-          disabled={pending}
+          disabled={pending || !winner}
           className="btn-gold w-full justify-center"
-          style={pending ? { opacity: 0.7, cursor: "not-allowed" } : {}}
+          style={!winner || pending ? { opacity: 0.5, cursor: "not-allowed" } : {}}
         >
           {pending ? (
             <span className="flex items-center gap-2">
@@ -189,58 +189,9 @@ export default function ScoreEntryScreen({ match, player1, player2, onBack, onSu
               />
               Submitting…
             </span>
-          ) : (
-            "Submit Score"
-          )}
+          ) : "Submit Score"}
         </button>
       </div>
-    </div>
-  );
-}
-
-function ScoreInput({
-  value,
-  label,
-  onInc,
-  onDec,
-  onChange,
-}: {
-  value: number;
-  label: string;
-  onInc: () => void;
-  onDec: () => void;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1 flex-1">
-      <button
-        onClick={onDec}
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold"
-        style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", minWidth: 40 }}
-        aria-label={`Decrease ${label} score`}
-      >
-        −
-      </button>
-      <input
-        type="number"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="flex-1 text-center font-mono text-xl py-2 rounded-lg focus:outline-none"
-        style={{
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid var(--glass-border)",
-          color: "var(--text-primary)",
-          minWidth: 0,
-        }}
-      />
-      <button
-        onClick={onInc}
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold"
-        style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", minWidth: 40 }}
-        aria-label={`Increase ${label} score`}
-      >
-        +
-      </button>
     </div>
   );
 }

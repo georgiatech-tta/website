@@ -19,7 +19,7 @@
   /* Text */
   --text-primary:   #edeae4;
   --text-secondary: rgba(237, 234, 228, 0.6);
-  --text-muted:     rgba(237, 234, 228, 0.35);
+  --text-muted:     rgba(237, 234, 228, 0.50);
 
   /* Motion */
   --ease-enter:  cubic-bezier(0.16, 1, 0.3, 1);

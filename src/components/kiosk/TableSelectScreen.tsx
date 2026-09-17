@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { KioskGroup } from "./KioskShell";
 
 interface Props {
@@ -11,9 +12,13 @@ export default function TableSelectScreen({ groups, onSelectGroup }: Props) {
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-2xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.22em] mb-2 text-center" style={{ color: "var(--gt-gold)" }}>
-          Kiosk Mode
-        </p>
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/tryouts" className="text-sm" style={{ color: "var(--gt-gold)" }}>← Home</Link>
+          <p className="text-xs uppercase tracking-[0.22em]" style={{ color: "var(--gt-gold)" }}>
+            Kiosk Mode
+          </p>
+          <div style={{ width: 60 }} />
+        </div>
         <h1 className="display text-4xl text-center mb-8" style={{ color: "var(--text-primary)" }}>
           Select Your Table
         </h1>
