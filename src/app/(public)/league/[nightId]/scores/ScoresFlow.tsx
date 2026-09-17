@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import MatchScoreForm from "./MatchScoreForm";
+import ScoreEntryScreen from "@/components/kiosk/ScoreEntryScreen";
+import type { KioskMatch, KioskPlayer } from "@/components/kiosk/KioskShell";
 
 interface Player {
   id: string;
   name: string;
+  leagueRating: number;
 }
 
 interface Match {
@@ -30,148 +32,150 @@ interface Props {
   groups: Group[];
 }
 
-export default function ScoresFlow({ groups }: Props) {
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+type Screen =
+  | { type: "group-select" }
+  | { type: "match-queue"; groupId: string }
+  | { type: "score-entry"; matchId: string; groupId: string };
 
-  // Step 1: group picker
-  if (!selectedGroup) {
+const STATUS_STYLE: Record<string, { label: string; color: string }> = {
+  pending_entry:    { label: "Pending",   color: "var(--gt-gold)" },
+  pending_approval: { label: "Submitted", color: "var(--text-muted)" },
+  approved:         { label: "Approved",  color: "#4ade80" },
+  rejected:         { label: "Rejected",  color: "#f87171" },
+};
+
+export default function ScoresFlow({ groups: initialGroups }: Props) {
+  const [groups, setGroups] = useState(initialGroups);
+  const [screen, setScreen] = useState<Screen>({ type: "group-select" });
+
+  const updateMatch = (matchId: string, update: Partial<Match>) => {
+    setGroups((prev) =>
+      prev.map((g) => ({
+        ...g,
+        matches: g.matches.map((m) => (m.id === matchId ? { ...m, ...update } : m)),
+      }))
+    );
+  };
+
+  // Score entry — reuse kiosk ScoreEntryScreen directly
+  if (screen.type === "score-entry") {
+    const group = groups.find((g) => g.id === screen.groupId);
+    const match = group?.matches.find((m) => m.id === screen.matchId);
+    if (!group || !match) return null;
+
+    const getPlayer = (id: string): KioskPlayer | null =>
+      group.players.find((p) => p.id === id) ?? null;
+
+    const kioskMatch: KioskMatch = match;
+    const pendingMatches = group.matches.filter((m) => m.status === "pending_entry");
+
     return (
-      <div className="space-y-3">
-        <p className="text-sm font-medium text-gray-700">Which group are you in?</p>
-        <div className="grid grid-cols-2 gap-3">
-          {groups.map((g) => (
-            <button
-              key={g.id}
-              onClick={() => setSelectedGroup(g)}
-              className="text-left bg-white border border-gray-200 rounded-xl p-4 hover:border-[#B3A369] hover:bg-amber-50 transition-colors"
-            >
-              <p className="font-semibold text-gray-900 mb-1">Group {g.tableNumber}</p>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {g.players.map((p) => p.name).join(" · ")}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+      <ScoreEntryScreen
+        match={kioskMatch}
+        player1={getPlayer(match.player1Id)}
+        player2={getPlayer(match.player2Id)}
+        onBack={() => setScreen({ type: "match-queue", groupId: screen.groupId })}
+        onSuccess={(updated) => {
+          updateMatch(match.id, updated);
+          const nextPending = pendingMatches.find((m) => m.id !== match.id);
+          setTimeout(() => {
+            if (nextPending) {
+              setScreen({ type: "score-entry", matchId: nextPending.id, groupId: screen.groupId });
+            } else {
+              setScreen({ type: "match-queue", groupId: screen.groupId });
+            }
+          }, 2000);
+        }}
+      />
     );
   }
 
-  // Step 2: player picker
-  if (!selectedPlayer) {
+  // Match queue — all matches in the group, tap to enter score
+  if (screen.type === "match-queue") {
+    const group = groups.find((g) => g.id === screen.groupId);
+    if (!group) return null;
+
+    const getName = (id: string) => group.players.find((p) => p.id === id)?.name ?? "Unknown";
+    const getRating = (id: string) => group.players.find((p) => p.id === id)?.leagueRating ?? "";
+
     return (
-      <div className="space-y-3">
-        <button
-          onClick={() => setSelectedGroup(null)}
-          className="text-sm text-[#B3A369] hover:underline flex items-center gap-1"
-        >
-          ← Group {selectedGroup.tableNumber}
-        </button>
-        <p className="text-sm font-medium text-gray-700">Which player are you?</p>
-        <div className="flex flex-col gap-2">
-          {selectedGroup.players.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setSelectedPlayer(p)}
-              className="text-left bg-white border border-gray-200 rounded-xl px-5 py-3 hover:border-[#B3A369] hover:bg-amber-50 transition-colors font-medium text-gray-900"
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Step 3: score entry — show only this player's matches
-  const myMatches = selectedGroup.matches.filter(
-    (m) => m.player1Id === selectedPlayer.id || m.player2Id === selectedPlayer.id
-  );
-
-  const opponentName = (m: Match) => {
-    const oppId = m.player1Id === selectedPlayer.id ? m.player2Id : m.player1Id;
-    return selectedGroup.players.find((p) => p.id === oppId)?.name ?? "Unknown";
-  };
-
-  // Ensure selected player is always "player left" (me)
-  const normalizeMatch = (m: Match) => {
-    const iAmP1 = m.player1Id === selectedPlayer.id;
-    return {
-      ...m,
-      meId: selectedPlayer.id,
-      themId: iAmP1 ? m.player2Id : m.player1Id,
-      // If I'm player2, flip scores for display purposes
-      myScore: iAmP1 ? m.scoreP1 : m.scoreP2,
-      theirScore: iAmP1 ? m.scoreP2 : m.scoreP1,
-    };
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setSelectedPlayer(null)}
-          className="text-sm text-[#B3A369] hover:underline"
-        >
-          ← Back
-        </button>
-        <div>
-          <span className="font-semibold text-gray-900">{selectedPlayer.name}</span>
-          <span className="text-gray-500 text-sm ml-2">· Group {selectedGroup.tableNumber}</span>
-        </div>
-      </div>
-
-      {myMatches.length === 0 && (
-        <p className="text-gray-500 text-sm">No matches found for this player.</p>
-      )}
-
       <div className="space-y-4">
-        {myMatches.map((match) => {
-          const nm = normalizeMatch(match);
-          const opp = opponentName(match);
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setScreen({ type: "group-select" })}
+            className="text-sm"
+            style={{ color: "var(--gt-gold)" }}
+          >
+            ← Back
+          </button>
+          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Group {group.tableNumber}
+          </p>
+          <div style={{ width: 48 }} />
+        </div>
 
-          if (match.status === "approved") {
+        <div className="space-y-2">
+          {group.matches.map((match) => {
+            const canTap = match.status === "pending_entry" || match.status === "rejected";
+            const statusInfo = STATUS_STYLE[match.status] ?? { label: match.status, color: "var(--text-muted)" };
             return (
-              <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-4">
-                <p className="text-sm font-medium text-gray-800 mb-2">
-                  {selectedPlayer.name} vs {opp}
-                </p>
-                <p className="text-green-700 text-sm flex items-center gap-2">
-                  <span>✓ Approved —</span>
-                  <span>{match.winnerId === selectedPlayer.id ? selectedPlayer.name : opp} wins</span>
-                </p>
-              </div>
+              <button
+                key={match.id}
+                type="button"
+                disabled={!canTap}
+                onClick={() =>
+                  canTap && setScreen({ type: "score-entry", matchId: match.id, groupId: group.id })
+                }
+                className="w-full text-left glass rounded-xl p-4 transition"
+                style={canTap ? { cursor: "pointer" } : { opacity: 0.6, cursor: "default" }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+                      {getName(match.player1Id)} vs {getName(match.player2Id)}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {getRating(match.player1Id)} · {getRating(match.player2Id)}
+                    </p>
+                  </div>
+                  <span className="text-xs font-medium shrink-0" style={{ color: statusInfo.color }}>
+                    {statusInfo.label}
+                  </span>
+                </div>
+                {match.status === "rejected" && match.rejectionReason && (
+                  <p className="text-xs mt-1" style={{ color: "#f87171" }}>
+                    Rejected: {match.rejectionReason}
+                  </p>
+                )}
+              </button>
             );
-          }
+          })}
+        </div>
+      </div>
+    );
+  }
 
-          if (match.status === "pending_approval") {
-            return (
-              <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-4">
-                <p className="text-sm font-medium text-gray-800 mb-2">
-                  {selectedPlayer.name} vs {opp}
-                </p>
-                <p className="text-amber-600 text-sm">⏳ Submitted — awaiting review</p>
-              </div>
-            );
-          }
-
-          return (
-            <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-5">
-              <p className="text-sm font-semibold text-gray-800 mb-4">
-                {selectedPlayer.name} vs {opp}
-              </p>
-              {match.status === "rejected" && match.rejectionReason && (
-                <p className="text-red-600 text-sm mb-3">Rejected: {match.rejectionReason}</p>
-              )}
-              <MatchScoreForm
-                matchId={match.id}
-                me={{ id: selectedPlayer.id, name: selectedPlayer.name }}
-                them={{ id: nm.themId, name: opp }}
-                iAmPlayer1={match.player1Id === selectedPlayer.id}
-              />
-            </div>
-          );
-        })}
+  // Group select
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+        Which group?
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        {groups.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => setScreen({ type: "match-queue", groupId: g.id })}
+            className="text-left glass glass-hover rounded-xl p-4 transition"
+          >
+            <p className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+              Group {g.tableNumber}
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              {g.players.map((p) => p.name).join(" · ")}
+            </p>
+          </button>
+        ))}
       </div>
     </div>
   );

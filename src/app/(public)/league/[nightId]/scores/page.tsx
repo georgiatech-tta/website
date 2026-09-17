@@ -16,7 +16,7 @@ export default async function ScoresPage({
       groups: {
         orderBy: { tableNumber: "asc" },
         include: {
-          entries: { include: { player: { select: { id: true, name: true } } } },
+          entries: { include: { player: { select: { id: true, name: true, leagueRating: true } } } },
           matches: {
             select: {
               id: true,
@@ -39,7 +39,7 @@ export default async function ScoresPage({
   if (night.status !== "in_progress") {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
-        <p className="text-gray-700">Score entry is not open for this session.</p>
+        <p style={{ color: "var(--text-secondary)" }}>Score entry is not open for this session.</p>
       </div>
     );
   }
@@ -53,15 +53,15 @@ export default async function ScoresPage({
     tableNumber: g.tableNumber,
     players: g.entries
       .filter((e) => e.playerId && e.player)
-      .map((e) => ({ id: e.playerId!, name: e.player!.name })),
+      .map((e) => ({ id: e.playerId!, name: e.player!.name, leagueRating: e.player!.leagueRating })),
     matches: g.matches,
   }));
 
   return (
     <div className="max-w-lg mx-auto py-10 px-4 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Score Entry</h1>
-        <p className="text-gray-600 text-sm mt-1">
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Score Entry</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
           {dateStr} — {night.season.name}
         </p>
       </div>

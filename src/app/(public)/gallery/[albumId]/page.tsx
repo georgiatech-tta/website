@@ -25,15 +25,15 @@ export default async function AlbumPage({ params }: { params: Promise<{ albumId:
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
-      <Link href="/gallery" className="text-sm text-[var(--gt-navy)] underline underline-offset-2 mb-4 inline-block">
+      <Link href="/gallery" className="text-sm underline underline-offset-2 mb-4 inline-block" style={{ color: "var(--gt-gold)" }}>
         ← Gallery
       </Link>
-      <h1 className="text-3xl font-bold text-[var(--gt-navy)] mb-1">{album.name}</h1>
-      {album.description && <p className="text-gray-500 mb-6">{album.description}</p>}
-      <p className="text-sm text-gray-400 mb-6">{album.photos.length} photo{album.photos.length !== 1 ? "s" : ""}</p>
+      <h1 className="text-3xl font-bold mb-1" style={{ color: "var(--text-primary)" }}>{album.name}</h1>
+      {album.description && <p className="mb-6" style={{ color: "var(--text-secondary)" }}>{album.description}</p>}
+      <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>{album.photos.length} photo{album.photos.length !== 1 ? "s" : ""}</p>
 
       {album.photos.length === 0 ? (
-        <p className="text-gray-500">No photos in this album yet.</p>
+        <p style={{ color: "var(--text-muted)" }}>No photos in this album yet.</p>
       ) : (
         <PhotoGrid photos={album.photos} />
       )}

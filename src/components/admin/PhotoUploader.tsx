@@ -28,7 +28,7 @@ export default function PhotoUploader({ albumId }: { albumId: string }) {
 
   return (
     <div
-      className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-[var(--gt-navy)] transition cursor-pointer"
+      className="border-2 border-dashed border-[var(--glass-border)] rounded-xl p-8 text-center hover:border-[var(--gt-gold)] transition cursor-pointer"
       onClick={() => inputRef.current?.click()}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); }}
@@ -43,12 +43,12 @@ export default function PhotoUploader({ albumId }: { albumId: string }) {
       />
       {uploading ? (
         <div className="space-y-1">
-          {progress.map((p, i) => <p key={i} className="text-sm text-gray-600">{p}</p>)}
+          {progress.map((p, i) => <p key={i} className="text-sm" style={{ color: "var(--text-secondary)" }}>{p}</p>)}
         </div>
       ) : (
         <>
-          <p className="text-gray-500 text-sm">Drag &amp; drop photos here, or click to browse</p>
-          <p className="text-xs text-gray-400 mt-1">Multiple files supported</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Drag &amp; drop photos here, or click to browse</p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Multiple files supported</p>
         </>
       )}
     </div>

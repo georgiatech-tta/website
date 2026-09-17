@@ -19,11 +19,11 @@ export interface MatchWithPlayers {
   group: { tableNumber: number | null };
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  pending_entry: "bg-gray-100 text-gray-600",
-  pending_approval: "bg-yellow-100 text-yellow-700",
-  approved: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
+const STATUS_BADGE: Record<string, { bg: string; color: string }> = {
+  pending_entry:    { bg: "rgba(255,255,255,0.08)", color: "var(--text-muted)" },
+  pending_approval: { bg: "rgba(234,179,8,0.15)",   color: "#fbbf24" },
+  approved:         { bg: "rgba(74,222,128,0.15)",  color: "#4ade80" },
+  rejected:         { bg: "rgba(248,113,113,0.15)", color: "#f87171" },
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -62,32 +62,33 @@ function MatchRow({ match }: { match: MatchWithPlayers }) {
     setBusy(false);
   }
 
+  const badge = STATUS_BADGE[match.status] ?? STATUS_BADGE.pending_entry;
+
   return (
     <div className="py-3 flex flex-col gap-2">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-0.5">
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
             {match.player1.name} vs {match.player2.name}
           </p>
           {match.scoreP1 && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
               Scores: {match.scoreP1} / {match.scoreP2}
               {winnerName && <> — Winner: {winnerName}</>}
             </p>
           )}
           {match.submittedByEmail && (
-            <p className="text-xs text-gray-400">Submitted by: {match.submittedByEmail}</p>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>Submitted by: {match.submittedByEmail}</p>
           )}
           {match.status === "rejected" && match.rejectionReason && (
-            <p className="text-xs text-red-600">Reason: {match.rejectionReason}</p>
+            <p className="text-xs text-red-400">Reason: {match.rejectionReason}</p>
           )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              STATUS_BADGE[match.status] ?? "bg-gray-100 text-gray-600"
-            }`}
+            className="px-2 py-1 rounded-full text-xs font-medium"
+            style={{ background: badge.bg, color: badge.color }}
           >
             {STATUS_LABEL[match.status] ?? match.status}
           </span>
@@ -104,7 +105,7 @@ function MatchRow({ match }: { match: MatchWithPlayers }) {
               <button
                 onClick={() => setRejectOpen((o) => !o)}
                 disabled={busy}
-                className="border border-red-500 text-red-500 px-3 py-1 rounded text-sm hover:bg-red-50 transition disabled:opacity-50"
+                className="border border-red-500 text-red-400 px-3 py-1 rounded text-sm hover:bg-red-900/20 transition disabled:opacity-50"
               >
                 Reject
               </button>
@@ -112,7 +113,7 @@ function MatchRow({ match }: { match: MatchWithPlayers }) {
           )}
 
           {match.status === "approved" && (
-            <span className="text-green-600 text-sm">✓</span>
+            <span className="text-green-400 text-sm">✓</span>
           )}
         </div>
       </div>
@@ -124,25 +125,27 @@ function MatchRow({ match }: { match: MatchWithPlayers }) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Rejection reason"
-            className="border rounded px-2 py-1 text-sm flex-1 min-w-48"
+            className="border border-[var(--glass-border)] rounded px-2 py-1 text-sm flex-1 min-w-48 bg-[rgba(255,255,255,0.05)]"
+            style={{ color: "var(--text-primary)" }}
           />
           <button
             onClick={handleReject}
             disabled={busy || !reason.trim()}
-            className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition disabled:opacity-50"
+            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition disabled:opacity-50"
           >
             Confirm
           </button>
           <button
             onClick={() => setRejectOpen(false)}
-            className="text-sm text-gray-500 hover:underline"
+            className="text-sm hover:underline transition"
+            style={{ color: "var(--text-muted)" }}
           >
             Cancel
           </button>
         </div>
       )}
 
-      {msg && <p className="text-red-600 text-sm">{msg}</p>}
+      {msg && <p className="text-red-400 text-sm">{msg}</p>}
     </div>
   );
 }
@@ -154,7 +157,6 @@ export default function MatchApprovalPanel({
   matches: MatchWithPlayers[];
   nightId: string;
 }) {
-  // Group by tableNumber
   const grouped = matches.reduce<Record<string, MatchWithPlayers[]>>((acc, m) => {
     const key = String(m.group.tableNumber ?? "?");
     (acc[key] ??= []).push(m);
@@ -166,9 +168,9 @@ export default function MatchApprovalPanel({
   return (
     <div className="space-y-6">
       {tables.map((table) => (
-        <div key={table} className="bg-white rounded-xl border p-6">
-          <h3 className="font-semibold text-[var(--gt-navy)] mb-3">Table {table}</h3>
-          <div className="divide-y">
+        <div key={table} className="glass rounded-xl p-6">
+          <h3 className="font-semibold mb-3" style={{ color: "var(--gt-gold)" }}>Table {table}</h3>
+          <div className="divide-y divide-[var(--glass-border)]">
             {grouped[table].map((match) => (
               <MatchRow key={match.id} match={match} />
             ))}

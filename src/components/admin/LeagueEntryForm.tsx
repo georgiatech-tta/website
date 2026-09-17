@@ -33,6 +33,8 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
+  void preview;
+
   const playerMap = new Map(players.map((p) => [p.id, p]));
 
   function addGroup() {
@@ -111,16 +113,19 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
         !groups[gi].entries.some((e) => e.playerId === p.id)
     );
 
+  const inputClass = "border border-[var(--glass-border)] rounded-lg px-3 py-2 text-sm bg-[rgba(255,255,255,0.05)] focus:outline-none focus:ring-1 focus:ring-[var(--gt-gold)] w-full";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Night metadata */}
-      <div className="bg-white rounded-xl border p-5 flex flex-wrap gap-4">
+      <div className="glass rounded-xl p-5 flex flex-wrap gap-4">
         <div className="flex-1 min-w-40">
-          <label className="text-sm font-medium text-gray-700 block mb-1">Season</label>
+          <label className="text-sm font-medium block mb-1" style={{ color: "var(--text-secondary)" }}>Season</label>
           <select
             value={seasonId}
             onChange={(e) => setSeasonId(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm w-full"
+            className={inputClass}
+            style={{ color: "var(--text-primary)" }}
             required
           >
             {seasons.map((s) => (
@@ -130,12 +135,13 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1">Date</label>
+          <label className="text-sm font-medium block mb-1" style={{ color: "var(--text-secondary)" }}>Date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm"
+            className="border border-[var(--glass-border)] rounded-lg px-3 py-2 text-sm bg-[rgba(255,255,255,0.05)] focus:outline-none focus:ring-1 focus:ring-[var(--gt-gold)]"
+            style={{ color: "var(--text-primary)" }}
             required
           />
         </div>
@@ -143,8 +149,8 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
 
       {/* Groups */}
       {groups.map((group, gi) => (
-        <div key={gi} className="bg-white rounded-xl border p-5">
-          <h3 className="font-semibold text-[var(--gt-navy)] mb-3">Table {gi + 1}</h3>
+        <div key={gi} className="glass rounded-xl p-5">
+          <h3 className="font-semibold mb-3" style={{ color: "var(--gt-gold)" }}>Table {gi + 1}</h3>
 
           {/* Player search */}
           <div className="mb-3">
@@ -153,23 +159,27 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
               placeholder="Search player name…"
               value={query[gi] ?? ""}
               onChange={(e) => setQuery((q) => q.map((v, i) => (i === gi ? e.target.value : v)))}
-              className="border rounded-lg px-3 py-2 text-sm w-full"
+              className={inputClass}
+              style={{ color: "var(--text-primary)" }}
             />
             {query[gi] && (
-              <div className="border rounded-lg mt-1 bg-white shadow-sm max-h-40 overflow-auto divide-y">
+              <div className="border border-[var(--glass-border)] rounded-lg mt-1 glass-sm max-h-40 overflow-auto divide-y divide-[var(--glass-border)]">
                 {filteredPlayers(gi).slice(0, 8).map((p) => (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => addPlayerToGroup(gi, p.id)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex justify-between"
+                    className="w-full text-left px-3 py-2 text-sm flex justify-between transition"
+                    style={{ color: "var(--text-primary)" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <span>{p.name}</span>
-                    <span className="text-gray-400 font-mono">{p.leagueRating}</span>
+                    <span className="font-mono" style={{ color: "var(--text-muted)" }}>{p.leagueRating}</span>
                   </button>
                 ))}
                 {filteredPlayers(gi).length === 0 && (
-                  <p className="px-3 py-2 text-sm text-gray-400">No match — add new player in Roster first.</p>
+                  <p className="px-3 py-2 text-sm" style={{ color: "var(--text-muted)" }}>No match — add new player in Roster first.</p>
                 )}
               </div>
             )}
@@ -179,13 +189,14 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
           {group.entries.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
               {group.entries.map((e) => (
-                <div key={e.playerId} className="flex items-center gap-1 bg-[var(--gt-light)] rounded-full px-3 py-1 text-sm">
-                  <span className="font-medium">{playerMap.get(e.playerId)?.name}</span>
-                  <span className="text-gray-400 font-mono ml-1">{e.ratingBefore}</span>
+                <div key={e.playerId} className="flex items-center gap-1 glass-sm rounded-full px-3 py-1 text-sm">
+                  <span className="font-medium" style={{ color: "var(--text-primary)" }}>{playerMap.get(e.playerId)?.name}</span>
+                  <span className="font-mono ml-1" style={{ color: "var(--text-muted)" }}>{e.ratingBefore}</span>
                   <button
                     type="button"
                     onClick={() => removePlayerFromGroup(gi, e.playerId)}
-                    className="ml-1 text-gray-400 hover:text-red-500 leading-none"
+                    className="ml-1 hover:text-red-400 leading-none transition"
+                    style={{ color: "var(--text-muted)" }}
                   >
                     ×
                   </button>
@@ -201,7 +212,8 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
                 <select
                   value={m.player1Id}
                   onChange={(e) => updateMatch(gi, mi, "player1Id", e.target.value)}
-                  className="border rounded px-2 py-1 flex-1 min-w-24"
+                  className="border border-[var(--glass-border)] rounded px-2 py-1 flex-1 min-w-24 bg-[rgba(255,255,255,0.05)]"
+                  style={{ color: "var(--text-primary)" }}
                 >
                   {group.entries.map((e) => (
                     <option key={e.playerId} value={e.playerId}>{playerMap.get(e.playerId)?.name}</option>
@@ -211,30 +223,34 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
                   value={m.scoreP1}
                   onChange={(e) => updateMatch(gi, mi, "scoreP1", e.target.value)}
                   placeholder="e.g. 11-7,9-11,11-8"
-                  className="border rounded px-2 py-1 w-36"
+                  className="border border-[var(--glass-border)] rounded px-2 py-1 w-36 bg-[rgba(255,255,255,0.05)]"
+                  style={{ color: "var(--text-primary)" }}
                 />
-                <span className="text-gray-400">vs</span>
+                <span style={{ color: "var(--text-muted)" }}>vs</span>
                 <input
                   value={m.scoreP2}
                   onChange={(e) => updateMatch(gi, mi, "scoreP2", e.target.value)}
                   placeholder="scores"
-                  className="border rounded px-2 py-1 w-36"
+                  className="border border-[var(--glass-border)] rounded px-2 py-1 w-36 bg-[rgba(255,255,255,0.05)]"
+                  style={{ color: "var(--text-primary)" }}
                 />
                 <select
                   value={m.player2Id}
                   onChange={(e) => updateMatch(gi, mi, "player2Id", e.target.value)}
-                  className="border rounded px-2 py-1 flex-1 min-w-24"
+                  className="border border-[var(--glass-border)] rounded px-2 py-1 flex-1 min-w-24 bg-[rgba(255,255,255,0.05)]"
+                  style={{ color: "var(--text-primary)" }}
                 >
                   {group.entries.map((e) => (
                     <option key={e.playerId} value={e.playerId}>{playerMap.get(e.playerId)?.name}</option>
                   ))}
                 </select>
                 <div className="flex items-center gap-1">
-                  <span className="text-gray-500 text-xs">Winner:</span>
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>Winner:</span>
                   <select
                     value={m.winnerId}
                     onChange={(e) => updateMatch(gi, mi, "winnerId", e.target.value)}
-                    className="border rounded px-2 py-1"
+                    className="border border-[var(--glass-border)] rounded px-2 py-1 bg-[rgba(255,255,255,0.05)]"
+                    style={{ color: "var(--text-primary)" }}
                   >
                     <option value="">—</option>
                     {[m.player1Id, m.player2Id].map((pid) => (
@@ -245,22 +261,27 @@ export default function LeagueEntryForm({ players, seasons }: { players: Player[
               </div>
             ))}
           </div>
-          <button type="button" onClick={() => addMatch(gi)} className="text-sm text-blue-600 hover:underline">
+          <button type="button" onClick={() => addMatch(gi)} className="text-sm hover:underline" style={{ color: "var(--gt-gold)" }}>
             + Add Match
           </button>
         </div>
       ))}
 
-      <button type="button" onClick={addGroup} className="text-sm border border-dashed border-gray-300 rounded-lg px-4 py-2 w-full hover:bg-gray-50 transition">
+      <button type="button" onClick={addGroup}
+        className="text-sm border border-dashed border-[var(--glass-border)] rounded-lg px-4 py-2 w-full transition"
+        style={{ color: "var(--text-secondary)" }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+      >
         + Add Table/Group
       </button>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-400 text-sm">{error}</p>}
 
       <button
         type="submit"
         disabled={isPending || !seasonId}
-        className="bg-[var(--gt-navy)] text-white px-6 py-3 rounded-lg font-semibold hover:brightness-110 transition disabled:opacity-50"
+        className="btn-gold disabled:opacity-50"
       >
         {isPending ? "Saving…" : "Save League Night & Update Ratings"}
       </button>
