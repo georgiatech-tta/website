@@ -6,7 +6,7 @@ export const revalidate = 30;
 export const metadata = buildMeta("League", "Fall 2025 tryout schedule and registration for GT Table Tennis.");
 
 // Flip to false when tryouts are over to restore regular league page
-const TRYOUTS_ACTIVE = true;
+const TRYOUTS_ACTIVE = false;
 
 const GROUPS: { name: string; note?: string; players: string[] }[] = [
   { name: "Group 1", players: ["Stanley Hsu", "Gautam Pradhan", "Boyuan (Jerry) Yao"] },
