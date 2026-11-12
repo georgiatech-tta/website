@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { calculateGroupRatings } from "@/lib/usatt-rating";
+import { validateTTScores } from "@/lib/score-validation";
 import { revalidatePath } from "next/cache";
 
 export async function submitMatchScore(
@@ -21,15 +22,16 @@ export async function submitMatchScore(
     });
 
     if (!match) return { error: "Match not found" };
-    if (!["pending_entry", "rejected"].includes(match.status))
-      return { error: "This match is not open for score entry" };
     if (match.group.leagueNight.status !== "in_progress")
       return { error: "Score entry is not open for this league night" };
     if (data.winnerId !== match.player1Id && data.winnerId !== match.player2Id)
       return { error: "Winner must be one of the two players" };
 
-    await prisma.match.update({
-      where: { id: matchId },
+    const scoreError = validateTTScores(data.scoreP1, data.winnerId, match.player1Id);
+    if (scoreError) return { error: scoreError };
+
+    const updated = await prisma.match.updateMany({
+      where: { id: matchId, status: { in: ["pending_entry", "rejected"] } },
       data: {
         scoreP1: data.scoreP1,
         scoreP2: data.scoreP2,
@@ -40,6 +42,9 @@ export async function submitMatchScore(
         rejectionReason: null,
       },
     });
+
+    if (updated.count === 0)
+      return { error: "This match was already submitted. Refresh and try again." };
 
     const nightId = match.group.leagueNightId;
     revalidatePath(`/league/${nightId}/scores`);
